@@ -1,0 +1,776 @@
+async function renovarAccessToken() {
+    const clientId = '355052591281-haj4ho65tfppr51ei49f93e79r0rsct1.apps.googleusercontent.com';
+    const clientSecret = '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';
+    const refreshToken = '1//046SR2Bd895DvCgYIARAAGAQSNwF-L9IrjlTcWBE6ibiN0dIHd-AyC1LYzIs0dFG1UjUQ7fLSPFweb3_5-ViUgLsjgMdQwnc9vd0';
+
+    const body = new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token'
+    });
+
+    try {
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body.toString()
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.access_token;
+        } else {
+            console.error('Error al renovar el token de acceso:', await response.text());
+            alert('No se pudo renovar el token de acceso.');
+        }
+    } catch (error) {
+        console.error('Error al renovar el token:', error);
+    }
+}
+
+// Función para guardar la lista en Google Drive
+async function guardarListaEnDrive() {
+    const tablaAlumnos = document.getElementById('tabla-alumnos');
+    const filas = tablaAlumnos.querySelectorAll('tr');
+    const datos = [];
+
+    // Obtener los valores de los dropdowns y construir el título del archivo
+    const dropdownMateria = document.getElementById('materia');
+    const dropdownGrupo = document.getElementById('grupo');
+    const materia = dropdownMateria ? dropdownMateria.value.trim() : 'Materia';
+    const grupo = dropdownGrupo ? dropdownGrupo.value.trim() : 'Grupo';
+    const fecha = new Date();
+    const fechaFormateada = `${fecha.toLocaleString('es-ES', { month: 'short' })} ${fecha.getDate()} de ${fecha.getFullYear()}`;
+    const nombreArchivo = `${materia}-${grupo}-${fechaFormateada}.txt`;
+
+    // Recopilar datos de la tabla
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        if (celdas.length > 0) {
+            const alumno = celdas[0].textContent.trim();
+            const nombre = celdas[1].textContent.trim();
+            const asistio = celdas[2].querySelector('input').checked ? 'Sí' : 'No';
+            const materia = celdas[3].textContent.trim();
+            datos.push(`${alumno},${nombre},${asistio},${materia}`);
+        }
+    });
+
+    // Convertir datos a formato de texto
+    const contenido = datos.join('\n');
+
+    // Renovar el token de acceso antes de subir el archivo
+    const accessToken = await renovarAccessToken();
+    if (!accessToken) {
+        alert('No se pudo obtener el token de acceso. Inténtalo nuevamente.');
+        return;
+    }
+
+    // Subir el archivo a Google Drive
+    const fileMetadata = {
+        name: nombreArchivo,
+        mimeType: 'application/vnd.google-apps.file',
+        parents: ['1HO_fZ_kqtEgyD9dWLcFnFA_nRd8UenkU'] // ID de la carpeta en Drive
+    };
+    const fileContent = new Blob([contenido], { type: 'text/plain' });
+
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
+    form.append('file', fileContent);
+
+    try {
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            },
+            body: form
+        });
+
+        if (response.ok) {
+            alert('Lista guardada exitosamente en Google Drive.');
+        } else {
+            const errorDetails = await response.json();
+            console.error('Error al guardar el archivo:', errorDetails);
+            alert(`Error al guardar la lista: ${errorDetails.error.message || 'Desconocido'}`);
+        }
+    } catch (error) {
+        console.error('Error al guardar la lista en Drive:', error);
+        alert('Ocurrió un error al guardar la lista.');
+    }
+}
+
+// Agregar evento al botón de guardar
+const botonGuardar = document.getElementById('guardar-lista');
+if (botonGuardar) {
+    botonGuardar.addEventListener('click', guardarListaEnDrive);
+}
+
+// Funciones de manejo de eventos
+document.getElementById('btn-anexar').addEventListener('click', () => {
+    document.getElementById('form-anexar').style.display = 'block';
+    document.getElementById('form-pasar-lista').style.display = 'none';
+    document.getElementById('form-visualizar-lista').style.display = 'none';
+    document.getElementById('form-eliminar-lista').style.display = 'none';
+    document.getElementById('form-imprimir-lista').style.display = 'none';
+    document.getElementById('tabla-contenedor').style.display = 'none';
+});
+
+document.getElementById('btn-pasar-lista').addEventListener('click', () => {
+    document.getElementById('form-anexar').style.display = 'none';
+    document.getElementById('form-pasar-lista').style.display = 'block';
+    document.getElementById('form-visualizar-lista').style.display = 'none';
+    document.getElementById('form-eliminar-lista').style.display = 'none';
+    document.getElementById('form-imprimir-lista').style.display = 'none';
+
+    cargarEmpresas(); // Cargar empresas y grupos
+});
+
+document.getElementById('btn-visualizar').addEventListener('click', () => {
+    document.getElementById('form-anexar').style.display = 'none';
+    document.getElementById('form-pasar-lista').style.display = 'none';
+    document.getElementById('form-visualizar-lista').style.display = 'block';
+    document.getElementById('form-eliminar-lista').style.display = 'none';
+    document.getElementById('form-imprimir-lista').style.display = 'none';
+    cargarEmpresasVisualizar();
+});
+
+document.getElementById('btn-borrar').addEventListener('click', () => {
+    document.getElementById('form-anexar').style.display = 'none';
+    document.getElementById('form-pasar-lista').style.display = 'none';
+    document.getElementById('form-visualizar-lista').style.display = 'none';
+    document.getElementById('form-eliminar-lista').style.display = 'block';
+    document.getElementById('form-imprimir-lista').style.display = 'none';
+    document.getElementById('tabla-contenedor').style.display = 'none';
+    cargarEmpresasEliminar();
+});
+
+document.getElementById('btn-imprimir').addEventListener('click', () => {
+    document.getElementById('form-anexar').style.display = 'none';
+    document.getElementById('form-pasar-lista').style.display = 'none';
+    document.getElementById('form-visualizar-lista').style.display = 'none';
+    document.getElementById('form-eliminar-lista').style.display = 'none';
+    document.getElementById('form-imprimir-lista').style.display = 'block';
+    cargarEmpresasImprimir();
+});
+
+const FOLDER_ID = "1HO_fZ_kqtEgyD9dWLcFnFA_nRd8UenkU"; // ID de la carpeta en Drive
+
+document.getElementById('visualizar').addEventListener('click', async () => {
+    const empresa = document.getElementById('materia-visualizar').value;
+    const grupo = document.getElementById('grupo-visualizar').value;
+    const fecha = document.getElementById('fecha-visualizar').value;
+
+    // Validación de los campos
+    if (!empresa || !grupo || !fecha) {
+        alert('Por favor, selecciona una Empresa, Grupo-Materia y Fecha.');
+        return;
+    }
+
+    // Formatea la fecha y construye el nombre del archivo
+    const fechaFormateada = formatearFecha(fecha);
+    const nombreArchivo = `${empresa}-${grupo}-${fechaFormateada}`;
+    console.log(`Buscando archivo: ${nombreArchivo}`); // Muestra el nombre del archivo en consola
+
+    try {
+        const accessToken = await renovarAccessToken(); // Renueva el token de acceso
+        const archivo = await buscarArchivoEnDrive(nombreArchivo, accessToken);
+
+        if (archivo) {
+      console.log(`Archivo encontrado: ${archivo.name} (ID: ${archivo.id})`);
+      const contenido = await descargarContenidoArchivo(archivo.id, accessToken);
+      mostrarTabla(contenido, fecha);
+  } else {
+      alert(`No se encontró un archivo con el nombre: ${nombreArchivo}. Por favor verifica los datos ingresados.`);
+      console.warn(`Archivo no encontrado: ${nombreArchivo}`);
+  }
+    } catch (error) {
+        console.error("Error:", error);
+        alert('Ocurrió un error al buscar el archivo.');
+    }
+});
+
+// Funciones de carga de datos desde Google Sheets
+async function cargarEmpresas() {
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const response = await fetch(sheetURL);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+
+    const empresas = new Set();
+    const grupos = {};
+    const data = json.table.rows;
+    const selectEmpresa = document.getElementById('materia');
+    selectEmpresa.innerHTML = '<option value="">Selecciona una opción</option>';
+
+    data.forEach(row => {
+        const empresa = row.c[4]?.v; // Columna E para Empresa
+        if (empresa) {
+            empresas.add(empresa);
+            const grupo = row.c[3]?.v; // Columna D para Grupo-Materia
+            if (grupo && !grupos[empresa]) {
+                grupos[empresa] = new Set();
+            }
+            if (grupo) {
+                grupos[empresa].add(grupo);
+            }
+        }
+    });
+
+    empresas.forEach(empresa => {
+        const option = document.createElement('option');
+        option.value = empresa;
+        option.textContent = empresa;
+        selectEmpresa.appendChild(option);
+    });
+
+    selectEmpresa.addEventListener('change', () => {
+        cargarGrupos(data, selectEmpresa.value, grupos, 'grupo');
+    });
+
+    document.getElementById('grupo').addEventListener('change', () => {
+        const materiaSeleccionada = selectEmpresa.value;
+        const grupoSeleccionado = document.getElementById('grupo').value;
+        cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado);
+    });
+}
+
+// Función para cargar los grupos según la materia seleccionada
+function cargarGrupos(data, empresaSeleccionada, grupos, selectId) {
+    const selectGrupo = document.getElementById(selectId);
+    selectGrupo.innerHTML = '<option value="">Selecciona una opción</option>';
+
+    if (empresaSeleccionada && grupos[empresaSeleccionada]) {
+        grupos[empresaSeleccionada].forEach(grupo => {
+            const option = document.createElement('option');
+            option.value = grupo;
+            option.textContent = grupo;
+            selectGrupo.appendChild(option);
+        });
+    }
+}
+
+// Función para cargar los alumnos
+function cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado) {
+    const tablaAlumnos = document.getElementById('tabla-alumnos');
+    tablaAlumnos.innerHTML = ''; // Limpiar la tabla
+
+    const alumnosFiltrados = data.filter(row => {
+        const empresa = row.c[4]?.v; // Columna E para Empresa
+        const grupo = row.c[3]?.v;  // Columna D para Grupo
+        return empresa === materiaSeleccionada && grupo === grupoSeleccionado;
+    });
+
+    alumnosFiltrados.forEach(row => {
+        const alumno = row.c[1]?.v;
+        const nombre = row.c[2]?.v;
+        const asistio = row.c[3]?.v;
+        const fechaAsistencia = row.c[5]?.v;
+// SI QUIERO VER MATERIA id grupoSeleccionado SI QUIER VER EMPRESA materiaSeleccionada
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${alumno}</td>
+            <td>${nombre}</td>
+            <td style="display: flex; align-items: center; justify-content: center;"><input type="checkbox" ${asistio === 'Sí' ? 'checked' : ''}></td>
+            <td>${materiaSeleccionada}</td>
+        `;
+        tablaAlumnos.appendChild(tr);
+    });
+}
+
+// Buscar archivo en Google Drive usando el Access Token
+async function buscarArchivoEnDrive(nombreArchivo, accessToken) {
+  const query = encodeURIComponent(`'${FOLDER_ID}' in parents and name='${nombreArchivo}'`);
+  const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`;
+  console.log("URL completa de la petición:", url); // Muestra la URL en consola
+
+  try {
+      const response = await fetch(url, {
+          headers: {
+              'Authorization': `Bearer ${accessToken}`
+          }
+      });
+
+      if (!response.ok) {
+          console.error('Error al buscar en Drive:', await response.text());
+          throw new Error('No se pudo realizar la búsqueda en Google Drive.');
+      }
+
+      const data = await response.json();
+      return data.files && data.files.length > 0 ? data.files[0] : null;
+  } catch (error) {
+      console.error("Error en buscarArchivoEnDrive:", error);
+      throw error;
+  }
+}
+
+// Descargar el contenido del archivo
+async function descargarContenidoArchivo(fileId, accessToken) {
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const exportUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain`;
+
+    try {
+        // Intentar descarga directa
+        let response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        // Si la descarga directa falla, intentar exportación
+        if (!response.ok) {
+            console.warn('Intentando exportar el archivo como texto...');
+            response = await fetch(exportUrl, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Error al exportar el archivo:', await response.text());
+                throw new Error('No se pudo exportar el archivo.');
+            }
+        }
+
+        return await response.text(); // Retorna el contenido exportado o descargado
+    } catch (error) {
+        console.error('Error al descargar el archivo:', error);
+        throw new Error('No se pudo descargar el archivo.');
+    }
+}
+
+// Mostrar la tabla con los datos
+function mostrarTabla(contenido, fecha) {
+    // Elimina cualquier modal anterior existente
+    const modalExistente = document.getElementById('tabla-modal');
+    if (modalExistente) {
+        modalExistente.remove();
+    }
+
+    const filas = contenido.trim().split('\n'); // Divide el contenido por líneas
+    const datos = filas.map(fila => fila.split(',')); // Divide cada línea por comas
+
+    // Crear el modal y su contenido
+    const modal = document.createElement('div');
+    modal.id = 'tabla-modal';
+    modal.className = 'modal fade';
+    modal.tabIndex = '-1';
+    modal.setAttribute('aria-labelledby', 'tablaModalLabel');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tablaModalLabel">Lista del día ${formatearFechaVisual(fecha)}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Número de Empleado</th>
+                                <th>Nombre del Alumno</th>
+                                <th>Asistió</th>
+                                <th>Empresa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${datos.map(d => `
+                                <tr>
+                                    <td>${d[0]}</td>
+                                    <td>${d[1]}</td>
+                                    <td>${d[2]}</td>
+                                    <td>${d[3]}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary mt-3" data-bs-dismiss="modal">
+                        <i class="fas fa-window-close"></i> Cerrar
+                    </button>
+                    <button id="imprimir-lista" class="btn btn-warning mt-3" onclick="imprimirTabla()">
+                        <i class="fas fa-print"></i> Imprimir Lista
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Añadir el modal al cuerpo del documento
+    document.body.appendChild(modal);
+
+    // Mostrar el modal
+    const modalBootstrap = new bootstrap.Modal(modal);
+    modalBootstrap.show();
+}
+
+// Función para imprimir la tabla (opcional)
+function imprimirTabla() {
+    // Extraer solo la tabla y el título, ignorando botones
+    const tabla = document.querySelector('#tabla-modal .modal-body table').outerHTML;
+    const titulo = document.querySelector('#tabla-modal .modal-title').innerText;
+
+    // Crear la ventana de impresión con estilos específicos
+    const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
+    ventanaImpresion.document.open();
+    ventanaImpresion.document.write(`
+        <html>
+            <head>
+                <title>Imprimir Lista</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; color: #000; }
+                    h3 { text-align: center; margin-bottom: 20px; }
+                    .table { width: 100%; border-collapse: collapse; }
+                    .table th, .table td { border: 1px solid #000; padding: 8px; text-align: left; }
+                    .table thead { background-color: #000; color: #fff; }
+                    @media print {
+                        body { margin: 0; }
+                        .table { page-break-inside: auto; }
+                        .table tr { page-break-inside: avoid; page-break-after: auto; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h3>${titulo}</h3>
+                ${tabla}
+            </body>
+        </html>
+    `);
+    ventanaImpresion.document.close();
+    ventanaImpresion.focus();
+    ventanaImpresion.print();
+    ventanaImpresion.close();
+}
+
+
+
+
+// Renueva el token de acceso
+async function renovarAccessToken() {
+    const clientId = '355052591281-haj4ho65tfppr51ei49f93e79r0rsct1.apps.googleusercontent.com';
+    const clientSecret = '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';
+    const refreshToken = '1//046SR2Bd895DvCgYIARAAGAQSNwF-L9IrjlTcWBE6ibiN0dIHd-AyC1LYzIs0dFG1UjUQ7fLSPFweb3_5-ViUgLsjgMdQwnc9vd0';
+
+    const body = new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token'
+    });
+
+    try {
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body.toString()
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.access_token;
+        } else {
+            console.error('Error al renovar el token de acceso:', await response.text());
+            throw new Error('No se pudo renovar el token de acceso.');
+        }
+    } catch (error) {
+        console.error('Error al renovar el token:', error);
+        throw error;
+    }
+}
+
+// Formatea la fecha para el nombre del archivo
+function formatearFecha(fechaInput) {
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+    // Crear una fecha en la zona horaria local (sin ajustes UTC)
+    const [anio, mes, dia] = fechaInput.split('-');
+    const fecha = new Date(anio, mes - 1, dia); // mes es 0-based en JS
+
+    const diaLocal = fecha.getDate();
+    const mesLocal = meses[fecha.getMonth()];
+    const anioLocal = fecha.getFullYear();
+    return `${mesLocal} ${diaLocal} de ${anioLocal}`;
+}
+
+
+// Formatea la fecha para visualización en la tabla
+function formatearFechaVisual(fechaInput) {
+    const [anio, mes, dia] = fechaInput.split('-'); // Divide el formato "YYYY-MM-DD"
+    const fecha = new Date(anio, mes - 1, dia); // Crear la fecha correctamente (meses empiezan en 0)
+    return fecha.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+
+// Funciones de carga para los formularios de Visualizar, Eliminar e Imprimir
+async function cargarEmpresasVisualizar() {
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const response = await fetch(sheetURL);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+
+    const empresas = new Set();
+    const grupos = {};
+    const data = json.table.rows;
+    const selectEmpresa = document.getElementById('materia-visualizar');
+    selectEmpresa.innerHTML = '<option value="">Selecciona una opción</option>';
+
+    data.forEach(row => {
+        const empresa = row.c[4]?.v; // Columna E para Empresa
+        if (empresa) {
+            empresas.add(empresa);
+            const grupo = row.c[3]?.v; // Columna D para Grupo
+            if (grupo && !grupos[empresa]) {
+                grupos[empresa] = new Set();
+            }
+            if (grupo) {
+                grupos[empresa].add(grupo);
+            }
+        }
+    });
+
+    empresas.forEach(empresa => {
+        const option = document.createElement('option');
+        option.value = empresa;
+        option.textContent = empresa;
+        selectEmpresa.appendChild(option);
+    });
+
+    selectEmpresa.addEventListener('change', () => {
+        cargarGrupos(data, selectEmpresa.value, grupos, 'grupo-visualizar');
+    });
+
+    document.getElementById('grupo-visualizar').addEventListener('change', () => {
+        const materiaSeleccionada = selectEmpresa.value;
+        const grupoSeleccionado = document.getElementById('grupo-visualizar').value;
+        // Aquí puedes agregar funcionalidad adicional si es necesario
+    });
+}
+
+// Inicializar la carga de datos
+cargarEmpresasVisualizar();
+
+// Función para cargar empresas en el formulario de eliminación
+async function cargarEmpresasEliminar() {
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const response = await fetch(sheetURL);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+
+    const empresas = new Set();
+    const grupos = {};
+    const data = json.table.rows;
+    const selectEmpresa = document.getElementById('materia-eliminar');
+    selectEmpresa.innerHTML = '<option value="">Selecciona una opción</option>';
+
+    data.forEach(row => {
+        const empresa = row.c[4]?.v; // Columna E para Empresa
+        if (empresa) {
+            empresas.add(empresa);
+            const grupo = row.c[3]?.v; // Columna D para Grupo
+            if (grupo && !grupos[empresa]) {
+                grupos[empresa] = new Set();
+            }
+            if (grupo) {
+                grupos[empresa].add(grupo);
+            }
+        }
+    });
+
+    empresas.forEach(empresa => {
+        const option = document.createElement('option');
+        option.value = empresa;
+        option.textContent = empresa;
+        selectEmpresa.appendChild(option);
+    });
+
+    selectEmpresa.addEventListener('change', () => {
+        cargarGrupos(data, selectEmpresa.value, grupos, 'grupo-eliminar');
+    });
+
+    document.getElementById('grupo-eliminar').addEventListener('change', () => {
+        const materiaSeleccionada = selectEmpresa.value;
+        const grupoSeleccionado = document.getElementById('grupo-eliminar').value;
+        cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado);
+    });
+}
+
+// Función para cargar empresas en el formulario de impresión
+async function cargarEmpresasImprimir() {
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const response = await fetch(sheetURL);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+
+    const empresas = new Set();
+    const grupos = {};
+    const data = json.table.rows;
+    const selectEmpresa = document.getElementById('materia-imprimir');
+    selectEmpresa.innerHTML = '<option value="">Selecciona una opción</option>';
+
+    data.forEach(row => {
+        const empresa = row.c[4]?.v; // Columna E para Empresa
+        if (empresa) {
+            empresas.add(empresa);
+            const grupo = row.c[3]?.v; // Columna D para Grupo
+            if (grupo && !grupos[empresa]) {
+                grupos[empresa] = new Set();
+            }
+            if (grupo) {
+                grupos[empresa].add(grupo);
+            }
+        }
+    });
+
+    empresas.forEach(empresa => {
+        const option = document.createElement('option');
+        option.value = empresa;
+        option.textContent = empresa;
+        selectEmpresa.appendChild(option);
+    });
+
+    selectEmpresa.addEventListener('change', () => {
+        cargarGrupos(data, selectEmpresa.value, grupos, 'grupo-imprimir');
+    });
+
+    document.getElementById('grupo-imprimir').addEventListener('change', () => {
+        const materiaSeleccionada = selectEmpresa.value;
+        const grupoSeleccionado = document.getElementById('grupo-imprimir').value;
+        cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado);
+    });
+}
+
+let datosOriginales = []; // Guarda todos los datos originales
+
+// Función para obtener los datos desde Google Sheets
+async function obtenerDatosGoogleSheets() {
+    const url = 'https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos';
+
+    try {
+        const response = await fetch(url);
+        const text = await response.text();
+        // Extraer solo el contenido JSON válido de la respuesta
+            const jsonData = JSON.parse(text.substring(47).slice(0, -2));
+
+            // Mapear las filas del JSON a un formato más usable
+            datosOriginales = jsonData.table.rows.map(row => ({
+                Empresa: row.c[4]?.v || '',  // Columna A
+                Grupo: row.c[3]?.v || '',    // Columna B
+                B: row.c[1]?.v || '',        // Columna B (repitiendo por simplicidad)
+                C: row.c[2]?.v || '',        // Columna C
+                D: row.c[3]?.v || '',        // Columna D
+                E: row.c[4]?.v || ''         // Columna E
+            }));
+
+            console.log("Datos cargados:", datosOriginales); // Debug: Verifica los datos cargados
+        } catch (error) {
+            console.error('Error al obtener los datos:', error);
+        }
+    }
+
+// Función para filtrar los datos y mostrar en la tabla
+function cargarDatosFiltrados() {
+    const empresaSeleccionada = document.getElementById('materia-imprimir').value;
+    const grupoSeleccionado = document.getElementById('grupo-imprimir').value;
+
+    if (empresaSeleccionada && grupoSeleccionado) {
+        const datosFiltrados = datosOriginales.filter(row =>
+            row.Empresa === empresaSeleccionada && row.Grupo === grupoSeleccionado
+        );
+
+        mostrarTablaEditable(datosFiltrados);
+    }
+}
+
+// Función para mostrar datos en la tabla
+function mostrarTablaEditable(rows) {
+    const tbody = document.querySelector('#tabla-alumnos2 tbody');
+    //tbody.innerHTML = ''; // Limpiar la tabla
+
+    rows.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td contenteditable="true" data-index="${index}" data-col="B">${row.B}</td>
+            <td contenteditable="true" data-index="${index}" data-col="C">${row.C}</td>
+            <td contenteditable="true" data-index="${index}" data-col="D">${row.D}</td>
+            <td contenteditable="true" data-index="${index}" data-col="E">${row.E}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('popup-editar-tabla').style.display = 'block';
+    console.log("Datos mostrados en la tabla:", rows);
+}
+
+document.getElementById('guardar-cambios').addEventListener('click', async () => {
+    const tbody = document.querySelector('#tabla-alumnos2 tbody');
+    const filas = Array.from(tbody.rows);
+    const cambios = [];
+
+    // Recorremos las filas de la tabla y recogemos las modificaciones
+    filas.forEach(fila => {
+        const index = fila.querySelector('[data-index]').dataset.index;
+        const updatedB = fila.querySelector('[data-col="B"]').textContent;
+        const updatedC = fila.querySelector('[data-col="C"]').textContent;
+        const updatedD = fila.querySelector('[data-col="D"]').textContent;
+        const updatedE = fila.querySelector('[data-col="E"]').textContent;
+
+        // Guardamos los cambios (con el índice como referencia, si es necesario)
+        cambios.push({
+            index,
+            B: updatedB,
+            C: updatedC,
+            D: updatedD,
+            E: updatedE
+        });
+    });
+
+    // Llamar a la función que actualizará los datos en Google Sheets
+    await guardarCambiosGoogleSheets(cambios);
+});
+
+async function guardarCambiosGoogleSheets(cambios) {
+    // Proxy para evitar el error de CORS
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const url = 'https://script.google.com/macros/s/AKfycbyWq7jwg0nYwJ1hLpoXCj8lA1uBOXp-lcMTKFzLiL8LY5OgeyqA2PGGw4eZpqFxO-ne/exec';
+
+    const fullUrl = proxyUrl + url; // Combinar el proxy con tu URL
+
+    const body = JSON.stringify({ cambios });
+
+    try {
+        // Enviar los cambios a Google Sheets a través del proxy
+        const response = await fetch(fullUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: body,
+        });
+
+        const data = await response.json();
+        console.log('Respuesta del servidor:', data);
+
+        if (data.success) {
+            alert('Cambios guardados correctamente');
+        } else {
+            alert('Error al guardar los cambios');
+        }
+    } catch (error) {
+        console.error('Error al guardar los cambios:', error);
+        alert('Hubo un error al guardar los cambios');
+    }
+}
+
+
+// Escuchar cambios en los dropdowns
+document.getElementById('materia-imprimir').addEventListener('change', cargarDatosFiltrados);
+document.getElementById('grupo-imprimir').addEventListener('change', cargarDatosFiltrados);
+
+
+// Inicializar datos
+obtenerDatosGoogleSheets();
