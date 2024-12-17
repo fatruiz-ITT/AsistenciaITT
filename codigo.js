@@ -72,7 +72,7 @@ async function guardarListaEnDrive() {
     const fileMetadata = {
         name: nombreArchivo,
         mimeType: 'application/vnd.google-apps.file',
-        parents: ['1HO_fZ_kqtEgyD9dWLcFnFA_nRd8UenkU'] // ID de la carpeta en Drive
+        parents: ['1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu'] // ID de la carpeta en Drive
     };
     const fileContent = new Blob([contenido], { type: 'text/plain' });
 
@@ -194,7 +194,7 @@ document.getElementById('visualizar').addEventListener('click', async () => {
 
 // Funciones de carga de datos desde Google Sheets
 async function cargarEmpresas() {
-    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
     const response = await fetch(sheetURL);
     const text = await response.text();
     const json = JSON.parse(text.substring(47).slice(0, -2));
@@ -508,7 +508,7 @@ function formatearFechaVisual(fechaInput) {
 
 // Funciones de carga para los formularios de Visualizar, Eliminar e Imprimir
 async function cargarEmpresasVisualizar() {
-    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
     const response = await fetch(sheetURL);
     const text = await response.text();
     const json = JSON.parse(text.substring(47).slice(0, -2));
@@ -556,7 +556,7 @@ cargarEmpresasVisualizar();
 
 // Función para cargar empresas en el formulario de eliminación
 async function cargarEmpresasEliminar() {
-    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
     const response = await fetch(sheetURL);
     const text = await response.text();
     const json = JSON.parse(text.substring(47).slice(0, -2));
@@ -601,7 +601,7 @@ async function cargarEmpresasEliminar() {
 
 // Función para cargar empresas en el formulario de impresión
 async function cargarEmpresasImprimir() {
-    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
     const response = await fetch(sheetURL);
     const text = await response.text();
     const json = JSON.parse(text.substring(47).slice(0, -2));
@@ -648,7 +648,7 @@ let datosOriginales = []; // Guarda todos los datos originales
 
 // Función para obtener los datos desde Google Sheets
 async function obtenerDatosGoogleSheets() {
-    const url = 'https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos';
+    const url = 'https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos';
 
     try {
         const response = await fetch(url);
