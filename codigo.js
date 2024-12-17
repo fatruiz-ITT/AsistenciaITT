@@ -156,7 +156,7 @@ document.getElementById('btn-imprimir').addEventListener('click', () => {
     cargarEmpresasImprimir();
 });
 
-const FOLDER_ID = "1HO_fZ_kqtEgyD9dWLcFnFA_nRd8UenkU"; // ID de la carpeta en Drive
+const FOLDER_ID = "1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu"; // ID de la carpeta en Drive
 
 document.getElementById('visualizar').addEventListener('click', async () => {
     const empresa = document.getElementById('materia-visualizar').value;
