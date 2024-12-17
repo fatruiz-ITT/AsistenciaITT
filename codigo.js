@@ -209,7 +209,7 @@ async function cargarEmpresas() {
         const empresa = row.c[4]?.v; // Columna E para Empresa
         if (empresa) {
             empresas.add(empresa);
-            const grupo = row.c[3]?.v; // Columna D para Grupo-Materia
+            const grupo = row.c[6]?.v; // Columna D para Grupo-Materia
             if (grupo && !grupos[empresa]) {
                 grupos[empresa] = new Set();
             }
@@ -259,7 +259,7 @@ function cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado) {
 
     const alumnosFiltrados = data.filter(row => {
         const empresa = row.c[4]?.v; // Columna E para Empresa
-        const grupo = row.c[3]?.v;  // Columna D para Grupo
+        const grupo = row.c[6]?.v;  // Columna D para Grupo
         return empresa === materiaSeleccionada && grupo === grupoSeleccionado;
     });
 
@@ -659,7 +659,7 @@ async function obtenerDatosGoogleSheets() {
             // Mapear las filas del JSON a un formato más usable
             datosOriginales = jsonData.table.rows.map(row => ({
                 Empresa: row.c[4]?.v || '',  // Columna A
-                Grupo: row.c[3]?.v || '',    // Columna B
+                Grupo: row.c[6]?.v || '',    // Columna B
                 B: row.c[1]?.v || '',        // Columna B (repitiendo por simplicidad)
                 C: row.c[2]?.v || '',        // Columna C
                 D: row.c[3]?.v || '',        // Columna D
