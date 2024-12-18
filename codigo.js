@@ -108,71 +108,58 @@ if (botonGuardar) {
     botonGuardar.addEventListener('click', guardarListaEnDrive);
 }
 
-// Funciones de manejo de eventos
+// Función para ocultar todos los formularios
+function ocultarTodosLosFormularios() {
+    const formularios = [
+        'form-anexar',
+        'form-pasar-lista',
+        'form-visualizar-lista',
+        'form-eliminar-lista',
+        'form-imprimir-lista',
+        'form-sumarizar',
+    ];
+    formularios.forEach(id => {
+        document.getElementById(id).style.display = 'none';
+    });
+}
+
+// Eventos de botones
 document.getElementById('btn-anexar').addEventListener('click', () => {
+    ocultarTodosLosFormularios();
     document.getElementById('form-anexar').style.display = 'block';
-    document.getElementById('form-pasar-lista').style.display = 'none';
-    document.getElementById('form-visualizar-lista').style.display = 'none';
-    document.getElementById('form-eliminar-lista').style.display = 'none';
-    document.getElementById('form-imprimir-lista').style.display = 'none';
     document.getElementById('tabla-contenedor').style.display = 'none';
-    document.getElementById('form-sumarizar').style.display = 'none';
 });
 
 document.getElementById('btn-pasar-lista').addEventListener('click', () => {
-    document.getElementById('form-anexar').style.display = 'none';
+    ocultarTodosLosFormularios();
     document.getElementById('form-pasar-lista').style.display = 'block';
-    document.getElementById('form-visualizar-lista').style.display = 'none';
-    document.getElementById('form-eliminar-lista').style.display = 'none';
-    document.getElementById('form-imprimir-lista').style.display = 'none';
-    document.getElementById('form-sumarizar').style.display = 'none';
-
     cargarEmpresas(); // Cargar empresas y grupos
 });
 
 document.getElementById('btn-visualizar').addEventListener('click', () => {
-    document.getElementById('form-anexar').style.display = 'none';
-    document.getElementById('form-pasar-lista').style.display = 'none';
+    ocultarTodosLosFormularios();
     document.getElementById('form-visualizar-lista').style.display = 'block';
-    document.getElementById('form-eliminar-lista').style.display = 'none';
-    document.getElementById('form-imprimir-lista').style.display = 'none';
-    document.getElementById('form-sumarizar').style.display = 'none';
-    
     cargarEmpresasVisualizar();
 });
 
 document.getElementById('btn-borrar').addEventListener('click', () => {
-    document.getElementById('form-anexar').style.display = 'none';
-    document.getElementById('form-pasar-lista').style.display = 'none';
-    document.getElementById('form-visualizar-lista').style.display = 'none';
+    ocultarTodosLosFormularios();
     document.getElementById('form-eliminar-lista').style.display = 'block';
-    document.getElementById('form-imprimir-lista').style.display = 'none';
     document.getElementById('tabla-contenedor').style.display = 'none';
-    document.getElementById('form-sumarizar').style.display = 'none';
-    
     cargarEmpresasEliminar();
 });
 
 document.getElementById('btn-imprimir').addEventListener('click', () => {
-    document.getElementById('form-anexar').style.display = 'none';
-    document.getElementById('form-pasar-lista').style.display = 'none';
-    document.getElementById('form-visualizar-lista').style.display = 'none';
-    document.getElementById('form-eliminar-lista').style.display = 'none';
+    ocultarTodosLosFormularios();
     document.getElementById('form-imprimir-lista').style.display = 'block';
-    document.getElementById('form-sumarizar').style.display = 'none';
-    
     cargarEmpresasImprimir();
 });
 
 document.getElementById('btn-sumarizar').addEventListener('click', () => {
-     document.getElementById('form-sumarizar').style.display = 'block';
-    document.getElementById('form-anexar').style.display = 'none';
-    document.getElementById('form-pasar-lista').style.display = 'none';
-    document.getElementById('form-visualizar-lista').style.display = 'none';
-    document.getElementById('form-eliminar-lista').style.display = 'none';
-    document.getElementById('form-imprimir-lista').style.display = 'none';
-
+    ocultarTodosLosFormularios();
+    document.getElementById('form-sumarizar').style.display = 'block';
 });
+
 
 const FOLDER_ID = "1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu"; // ID de la carpeta en Drive
 
