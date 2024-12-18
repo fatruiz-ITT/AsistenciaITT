@@ -116,6 +116,7 @@ document.getElementById('btn-anexar').addEventListener('click', () => {
     document.getElementById('form-eliminar-lista').style.display = 'none';
     document.getElementById('form-imprimir-lista').style.display = 'none';
     document.getElementById('tabla-contenedor').style.display = 'none';
+    document.getElementById('form-sumarizar').style.display = 'none';
 });
 
 document.getElementById('btn-pasar-lista').addEventListener('click', () => {
@@ -124,6 +125,7 @@ document.getElementById('btn-pasar-lista').addEventListener('click', () => {
     document.getElementById('form-visualizar-lista').style.display = 'none';
     document.getElementById('form-eliminar-lista').style.display = 'none';
     document.getElementById('form-imprimir-lista').style.display = 'none';
+    document.getElementById('form-sumarizar').style.display = 'none';
 
     cargarEmpresas(); // Cargar empresas y grupos
 });
@@ -134,6 +136,7 @@ document.getElementById('btn-visualizar').addEventListener('click', () => {
     document.getElementById('form-visualizar-lista').style.display = 'block';
     document.getElementById('form-eliminar-lista').style.display = 'none';
     document.getElementById('form-imprimir-lista').style.display = 'none';
+    document.getElementById('form-sumarizar').style.display = 'none';
     cargarEmpresasVisualizar();
 });
 
@@ -144,6 +147,7 @@ document.getElementById('btn-borrar').addEventListener('click', () => {
     document.getElementById('form-eliminar-lista').style.display = 'block';
     document.getElementById('form-imprimir-lista').style.display = 'none';
     document.getElementById('tabla-contenedor').style.display = 'none';
+    document.getElementById('form-sumarizar').style.display = 'none';
     cargarEmpresasEliminar();
 });
 
@@ -153,7 +157,18 @@ document.getElementById('btn-imprimir').addEventListener('click', () => {
     document.getElementById('form-visualizar-lista').style.display = 'none';
     document.getElementById('form-eliminar-lista').style.display = 'none';
     document.getElementById('form-imprimir-lista').style.display = 'block';
+     document.getElementById('form-sumarizar').style.display = 'none';
     cargarEmpresasImprimir();
+});
+
+document.getElementById('sumarizar-lista').addEventListener('click', () => {
+     document.getElementById('form-sumarizar').style.display = 'block';
+    document.getElementById('form-anexar').style.display = 'none';
+    document.getElementById('form-pasar-lista').style.display = 'none';
+    document.getElementById('form-visualizar-lista').style.display = 'none';
+    document.getElementById('form-eliminar-lista').style.display = 'none';
+    document.getElementById('form-imprimir-lista').style.display = 'none';
+
 });
 
 const FOLDER_ID = "1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu"; // ID de la carpeta en Drive
