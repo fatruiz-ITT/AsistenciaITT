@@ -735,7 +735,7 @@ document.getElementById('guardar-cambios').addEventListener('click', async () =>
 async function guardarCambiosGoogleSheets(cambios) {
     // Proxy para evitar el error de CORS
     const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const url = 'https://script.google.com/macros/s/AKfycbyWq7jwg0nYwJ1hLpoXCj8lA1uBOXp-lcMTKFzLiL8LY5OgeyqA2PGGw4eZpqFxO-ne/exec';
+    const url = 'https://script.google.com/macros/s/AKfycbztW-Ufq5M2KSKeFXJ2Nx8a6RrKfMdQwnH38OWKtL2Gs0Yyc_cfyMZsvPIaHakZ-T0F/exec';
 
     const fullUrl = proxyUrl + url; // Combinar el proxy con tu URL
 
