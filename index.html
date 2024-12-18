@@ -57,6 +57,29 @@
        input[type="checkbox"] {
            transform: scale(2.0);
        }
+
+        #form-sumarizar {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra horizontalmente los elementos */
+    gap: 2rem; /* Espaciado vertical entre los elementos */
+    }
+
+    .d-flex {
+    display: flex;
+    flex-direction: column; /* Coloca los elementos en una columna */
+    align-items: center; /* Centra horizontalmente los elementos */
+    gap: 1.5rem; /* Espaciado entre los elementos */
+    }
+
+    .mb-33 {
+    width: 100%; /* Asegura que los inputs y selects ocupen todo el ancho */
+    max-width: 400px; /* Limita el ancho máximo de los inputs y selects */
+    }
+
+    h2 {
+    margin-bottom: 2rem; /* Espaciado debajo del título */
+    }
     </style>
 </head>
 <body>
@@ -228,33 +251,35 @@
       </div>
   </div>
 
-  <div id="form-sumarizar" class="mt-4" style="display: none;">
-      <h2 class="text-center">Sumarizar Lista</h2>
-      <div class="d-flex align-items-start">
-          <div class="mb-3">
-            <label for="fecha-visualizar" class="form-label">Selecciona Fecha Inicial:</label>
-            <input type="date" id="fecha-visualizar" class="form-control">
-      </div>
-          
-    <div class="mb-3">
-        <label for="fecha-visualizar" class="form-label">Selecciona Fecha Final:</label>
-        <input type="date" id="fecha-visualizar" class="form-control">
-    </div>
+ <div id="form-sumarizar" class="mt-4" style="display: none;">
+    <h2 class="text-center">Sumarizar Lista</h2>
+    <div class="d-flex flex-column align-items-center gap-4">
+        <div class="mb-33">
+            <label for="fecha-inicial" class="form-label">Selecciona Fecha Inicial:</label>
+            <input type="date" id="fecha-inicial" class="form-control">
+        </div>
 
-    <div class="mb-3">
-        <label for="sumarizar-materia" class="form-label">Selecciona Materia:</label>
-        <select id="sumarizar-materia" class="form-select">
-            <option value="">Selecciona una opción</option>
-        </select>
-    </div>
+        <div class="mb-33">
+            <label for="fecha-final" class="form-label">Selecciona Fecha Final:</label>
+            <input type="date" id="fecha-final" class="form-control">
+        </div>
 
-    <div class="mb-3">
-          <label for="sumarizar-salon" class="form-label">Selecciona Materia:</label>
-          <select id="sumarizar-salon" class="form-select">
-              <option value="">Selecciona una opción</option>
-          </select>
-      </div>
+        <div class="mb-33">
+            <label for="sumarizar-materia" class="form-label">Selecciona Materia:</label>
+            <select id="sumarizar-materia" class="form-select">
+                <option value="">Selecciona una opción</option>
+            </select>
+        </div>
+
+        <div class="mb-33">
+            <label for="sumarizar-salon" class="form-label">Selecciona Materia:</label>
+            <select id="sumarizar-salon" class="form-select">
+                <option value="">Selecciona una opción</option>
+            </select>
+        </div>
+    </div>
 </div>
+
 
       <div class="d-flex justify-content-center">
           <button id="sumarizar-lista" class="btn btn-secondary mt-3">
