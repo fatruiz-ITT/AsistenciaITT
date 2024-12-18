@@ -161,7 +161,7 @@ document.getElementById('btn-imprimir').addEventListener('click', () => {
     cargarEmpresasImprimir();
 });
 
-document.getElementById('sumarizar-lista').addEventListener('click', () => {
+document.getElementById('btn-sumarizar').addEventListener('click', () => {
      document.getElementById('form-sumarizar').style.display = 'block';
     document.getElementById('form-anexar').style.display = 'none';
     document.getElementById('form-pasar-lista').style.display = 'none';
