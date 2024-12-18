@@ -205,20 +205,23 @@ async function cargarEmpresas() {
     const selectEmpresa = document.getElementById('materia');
     selectEmpresa.innerHTML = '<option value="">Selecciona una opción</option>';
 
+    // Recorrer las filas y extraer datos
     data.forEach(row => {
-        const empresa = row.c[4]?.v; // Columna E para Empresa
-        if (empresa) {
+        if (!row.c || !row.c[4]?.v || !row.c[6]?.v) return; // Ignorar filas vacías o incompletas
+
+        const empresa = row.c[4]?.v.trim(); // Columna E
+        const grupo = row.c[6]?.v.trim();   // Columna G
+
+        if (empresa && grupo) {
             empresas.add(empresa);
-            const grupo = row.c[6]?.v; // Columna G para Grupo-Materia
-            if (grupo && !grupos[empresa]) {
+            if (!grupos[empresa]) {
                 grupos[empresa] = new Set();
             }
-            if (grupo) {
-                grupos[empresa].add(grupo);
-            }
+            grupos[empresa].add(grupo);
         }
     });
 
+    // Llenar el dropdown de Empresa
     empresas.forEach(empresa => {
         const option = document.createElement('option');
         option.value = empresa;
@@ -226,10 +229,12 @@ async function cargarEmpresas() {
         selectEmpresa.appendChild(option);
     });
 
+    // Cargar grupos al seleccionar una empresa
     selectEmpresa.addEventListener('change', () => {
         cargarGrupos(data, selectEmpresa.value, grupos, 'grupo');
     });
 
+    // Cargar alumnos al seleccionar un grupo
     document.getElementById('grupo').addEventListener('change', () => {
         const materiaSeleccionada = selectEmpresa.value;
         const grupoSeleccionado = document.getElementById('grupo').value;
@@ -237,7 +242,7 @@ async function cargarEmpresas() {
     });
 }
 
-// Función para cargar los grupos según la materia seleccionada
+// Función para cargar los grupos según la empresa seleccionada
 function cargarGrupos(data, empresaSeleccionada, grupos, selectId) {
     const selectGrupo = document.getElementById(selectId);
     selectGrupo.innerHTML = '<option value="">Selecciona una opción</option>';
@@ -250,35 +255,42 @@ function cargarGrupos(data, empresaSeleccionada, grupos, selectId) {
             selectGrupo.appendChild(option);
         });
     }
-}
+}}
 
 // Función para cargar los alumnos
+// Función para cargar los alumnos en la tabla
 function cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado) {
     const tablaAlumnos = document.getElementById('tabla-alumnos');
     tablaAlumnos.innerHTML = ''; // Limpiar la tabla
 
     const alumnosFiltrados = data.filter(row => {
-        const empresa = row.c[4]?.v; // Columna E para Empresa
-        const grupo = row.c[6]?.v;  // Columna D para Grupo
+        const empresa = row.c[4]?.v?.trim(); // Columna E para Empresa
+        const grupo = row.c[6]?.v?.trim();  // Columna G para Grupo
         return empresa === materiaSeleccionada && grupo === grupoSeleccionado;
     });
 
+    // Crear filas para los alumnos
     alumnosFiltrados.forEach(row => {
-        const alumno = row.c[1]?.v;
-        const nombre = row.c[2]?.v;
-        const asistio = row.c[3]?.v;
-        const fechaAsistencia = row.c[5]?.v;
-// SI QUIERO VER MATERIA id grupoSeleccionado SI QUIER VER EMPRESA materiaSeleccionada
+        const alumno = row.c[1]?.v || ''; // Columna B
+        const nombre = row.c[2]?.v || ''; // Columna C
+        const asistio = row.c[3]?.v || ''; // Columna D
+        const fechaAsistencia = row.c[5]?.v || ''; // Columna F
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${alumno}</td>
             <td>${nombre}</td>
-            <td style="display: flex; align-items: center; justify-content: center;"><input type="checkbox" ${asistio === 'Sí' ? 'checked' : ''}></td>
+            <td style="display: flex; align-items: center; justify-content: center;">
+                <input type="checkbox" ${asistio === 'Sí' ? 'checked' : ''}>
+            </td>
             <td>${materiaSeleccionada}</td>
         `;
         tablaAlumnos.appendChild(tr);
     });
 }
+
+// Inicializar la carga de empresas al inicio del script
+cargarEmpresas();
 
 // Buscar archivo en Google Drive usando el Access Token
 async function buscarArchivoEnDrive(nombreArchivo, accessToken) {
