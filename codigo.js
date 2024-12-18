@@ -137,6 +137,7 @@ document.getElementById('btn-visualizar').addEventListener('click', () => {
     document.getElementById('form-eliminar-lista').style.display = 'none';
     document.getElementById('form-imprimir-lista').style.display = 'none';
     document.getElementById('form-sumarizar').style.display = 'none';
+    
     cargarEmpresasVisualizar();
 });
 
@@ -148,6 +149,7 @@ document.getElementById('btn-borrar').addEventListener('click', () => {
     document.getElementById('form-imprimir-lista').style.display = 'none';
     document.getElementById('tabla-contenedor').style.display = 'none';
     document.getElementById('form-sumarizar').style.display = 'none';
+    
     cargarEmpresasEliminar();
 });
 
@@ -157,7 +159,8 @@ document.getElementById('btn-imprimir').addEventListener('click', () => {
     document.getElementById('form-visualizar-lista').style.display = 'none';
     document.getElementById('form-eliminar-lista').style.display = 'none';
     document.getElementById('form-imprimir-lista').style.display = 'block';
-     document.getElementById('form-sumarizar').style.display = 'none';
+    document.getElementById('form-sumarizar').style.display = 'none';
+    
     cargarEmpresasImprimir();
 });
 
