@@ -1,8 +1,7 @@
 async function renovarAccessToken() {
-    const clientId = '217452065709-eoi637u5kp9929b3laob6in6a6skknjv.apps.googleusercontent.com';
-    const clientSecret = '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';
-    const refreshToken = '1//04APUwhJAouYcCgYIARAAGAQSNwF-L9IrRxdNS0F2LWrML4H6TaB4vPZOueJkpEjk_TxvSuleMoP6FoJe2BthSFWNymSdCK3VZDM';
-
+    const clientId = '355052591281-haj4ho65tfppr51ei49f93e79r0rsct1.apps.googleusercontent.com';
+    const clientSecret = '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';
+    const refreshToken = '1//046SR2Bd895DvCgYIARAAGAQSNwF-L9IrjlTcWBE6ibiN0dIHd-AyC1LYzIs0dFG1UjUQ7fLSPFweb3_5-ViUgLsjgMdQwnc9vd0';
     const body = new URLSearchParams({
         client_id: clientId,
         client_secret: clientSecret,
@@ -450,9 +449,9 @@ function imprimirTabla() {
 
 // Renueva el token de acceso
 async function renovarAccessToken() {
-    const clientId = '217452065709-eoi637u5kp9929b3laob6in6a6skknjv.apps.googleusercontent.com';
-    const clientSecret = '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';
-    const refreshToken = '1//04APUwhJAouYcCgYIARAAGAQSNwF-L9IrRxdNS0F2LWrML4H6TaB4vPZOueJkpEjk_TxvSuleMoP6FoJe2BthSFWNymSdCK3VZDM';
+    const clientId = '355052591281-haj4ho65tfppr51ei49f93e79r0rsct1.apps.googleusercontent.com';
+    const clientSecret = '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';
+    const refreshToken = '1//046SR2Bd895DvCgYIARAAGAQSNwF-L9IrjlTcWBE6ibiN0dIHd-AyC1LYzIs0dFG1UjUQ7fLSPFweb3_5-ViUgLsjgMdQwnc9vd0';
 
     const body = new URLSearchParams({
         client_id: clientId,
