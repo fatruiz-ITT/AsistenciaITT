@@ -733,16 +733,14 @@ document.getElementById('guardar-cambios').addEventListener('click', async () =>
 });
 
 async function guardarCambiosGoogleSheets(cambios) {
-    // Proxy para evitar el error de CORS
     const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
     const url = 'https://script.google.com/macros/s/AKfycbztW-Ufq5M2KSKeFXJ2Nx8a6RrKfMdQwnH38OWKtL2Gs0Yyc_cfyMZsvPIaHakZ-T0F/exec';
 
-    const fullUrl = proxyUrl + url; // Combinar el proxy con tu URL
+    const fullUrl = proxyUrl + url;
 
     const body = JSON.stringify({ cambios });
 
     try {
-        // Enviar los cambios a Google Sheets a través del proxy
         const response = await fetch(fullUrl, {
             method: 'POST',
             headers: {
@@ -751,19 +749,26 @@ async function guardarCambiosGoogleSheets(cambios) {
             body: body,
         });
 
-        const data = await response.json();
-        console.log('Respuesta del servidor:', data);
+        const responseText = await response.text();
+        try {
+            const data = JSON.parse(responseText);
+            console.log('Respuesta del servidor:', data);
 
-        if (data.success) {
-            alert('Cambios guardados correctamente');
-        } else {
-            alert('Error al guardar los cambios');
+            if (data.success) {
+                alert('Cambios guardados correctamente');
+            } else {
+                alert('Error al guardar los cambios');
+            }
+        } catch (error) {
+            console.error('La respuesta no es un JSON válido:', responseText);
+            alert('Error en la respuesta del servidor');
         }
     } catch (error) {
         console.error('Error al guardar los cambios:', error);
         alert('Hubo un error al guardar los cambios');
     }
 }
+
 
 
 // Escuchar cambios en los dropdowns
