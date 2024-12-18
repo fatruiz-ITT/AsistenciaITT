@@ -206,7 +206,7 @@
               <h3 class="text-center">Lista Alumnos</h3>
           </div>
           <div class="card-body">
-              <div class="table-responsive"> 
+              <div class="table-responsive">
               <table id="tabla-alumnos2" class="table table-bordered table-striped">
                   <thead>
                       <tr>
@@ -227,6 +227,33 @@
           </div>
       </div>
   </div>
+
+  <div id="form-sumarizar" class="mt-5" style="display: none;">
+      <h2 class="text-center">Sumarizar Lista</h2>
+      <div class="mb-3">
+            <label for="fecha-visualizar" class="form-label">Selecciona Fecha Inicial:</label>
+            <input type="date" id="fecha-visualizar" class="form-control">
+      </div>
+
+      <div class="mb-3">
+            <label for="fecha-visualizar" class="form-label">Selecciona Fecha Final:</label>
+            <input type="date" id="fecha-visualizar" class="form-control">
+      </div>
+
+      <div class="mb-3">
+          <label for="grupo-eliminar" class="form-label">Selecciona Materia:</label>
+          <select id="grupo-eliminar" class="form-select">
+              <option value="">Selecciona una opción</option>
+          </select>
+      </div>
+
+      <div class="d-flex justify-content-center">
+          <button id="eliminar-lista" class="btn btn-secondary mt-3">
+              <i class="fa-solid fa-filter"></i> Sumarizar Lista de Asistencia
+          </button>
+      </div>
+  </div>
+  
   </div>
     </div>
 </body>
