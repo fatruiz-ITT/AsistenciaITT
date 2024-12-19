@@ -863,7 +863,7 @@ async function buscarArchivos() {
 
     const token = await renovarAccessToken();
     const fechas = generarFechas(new Date(fechaInicial), new Date(fechaFinal));
-    const nombresEsperados = fechas.map(fecha => `${materia}-${salon}-${formatearFechaVisual(fecha)}`);
+    const nombresEsperados = fechas.map(fecha => `${materia}-${salon}-${formatearFechaNombre(fecha)}`);
 
     console.log('Nombres generados:', nombresEsperados); // Verifica los nombres generados.
 
@@ -899,13 +899,11 @@ function generarFechas(fechaInicial, fechaFinal) {
     return fechas;
 }
 
-// Formatear fecha en formato esperado (dic 17 de 2024).
 // Formatear fecha en formato "Mes Día de Año" (Ejemplo: Dic 18 de 2024).
 function formatearFechaNombre(fecha) {
     const opciones = { day: 'numeric', month: 'short', year: 'numeric' };
     return fecha.toLocaleDateString('es-ES', opciones).replace('.', '').replace(' de ', ' de ');
 }
-
 
 // Buscar un archivo por nombre exacto.
 async function buscarArchivoPorNombre(token, nombreArchivo) {
@@ -936,7 +934,7 @@ function parsearContenido(contenido, nombreArchivo) {
     try {
         const datos = JSON.parse(contenido);
         console.log('Datos procesados:', datos);
-        const fecha = nombreArchivo.match(/(\d{1,2}\s\w+\s\d{4})$/)[0];
+        const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)[0];
         return datos.map(item => ({
             numeroControl: item.numeroControl,
             nombre: item.nombre,
