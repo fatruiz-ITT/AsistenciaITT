@@ -830,6 +830,7 @@ obtenerDatosGoogleSheets();
 //******************************************************************************************************
 
 
+// Renovar el Access Token para acceder a la API de Google Drive
 async function renovarAccessToken() {
     const clientId = '217452065709-eoi637u5kp9929b3laob6in6a6skknjv.apps.googleusercontent.com';
     const clientSecret = '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';
@@ -838,104 +839,73 @@ async function renovarAccessToken() {
     const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: JSON.stringify({
+        body: new URLSearchParams({
             client_id: clientId,
             client_secret: clientSecret,
             refresh_token: refreshToken,
             grant_type: 'refresh_token',
-        }),
+        }).toString(),
     });
 
     const data = await response.json();
+    if (!data.access_token) {
+        console.error("Error al renovar el Access Token:", data);
+        throw new Error("No se pudo renovar el Access Token.");
+    }
     return data.access_token;
 }
 
-async function buscarArchivos(token, fileId) {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    const exportUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain`;  // Cambia el mimeType según el tipo de archivo que estás tratando de exportar.
+// Buscar archivos en Google Drive en base al nombre y carpeta
+async function buscarArchivos(token, nombreArchivo, folderId) {
+    const query = `'${folderId}' in parents and name contains '${nombreArchivo}' and trashed = false`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`;
 
-    try {
-        // Intentar descargar el archivo directamente
-        let response = await fetch(url, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+    const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
 
-        // Si la descarga directa no funciona, intentar exportar el archivo
-        if (!response.ok) {
-            console.warn('Intentando exportar el archivo como texto...');
-            response = await fetch(exportUrl, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (!response.ok) {
-                console.error('Error al exportar el archivo:', await response.text());
-                throw new Error('No se pudo exportar el archivo.');
-            }
-        }
-
-        // Si la respuesta es exitosa, obtener el contenido
-        const contenido = await response.text();
-        console.log('Contenido descargado:', contenido);
-        return contenido;
-    } catch (error) {
-        console.error('Error al descargar el archivo:', error);
-        throw new Error('No se pudo descargar el archivo.');
-    }
+    const data = await response.json();
+    return data.files || [];
 }
 
-// Generar fechas entre dos rangos.
+// Descargar contenido de un archivo desde Google Drive
+async function descargarArchivo(token, fileId) {
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+        console.error("Error al descargar el archivo:", await response.text());
+        throw new Error("No se pudo descargar el archivo.");
+    }
+
+    return await response.text();
+}
+
+// Generar un rango de fechas entre dos fechas dadas
 function generarFechas(fechaInicial, fechaFinal) {
     const fechas = [];
     let fechaActual = new Date(fechaInicial);
 
-    while (fechaActual <= fechaFinal) {
+    while (fechaActual <= new Date(fechaFinal)) {
         fechas.push(new Date(fechaActual));
-        fechaActual.setDate(fechaActual.getDate() + 1); // Avanzar al día siguiente.
+        fechaActual.setDate(fechaActual.getDate() + 1); // Avanzar un día
     }
 
     return fechas;
 }
 
-// Formatear fecha en formato "mes día de año" (Ejemplo: dic 18 de 2024).
+// Formatear fechas en un formato legible para el nombre de archivo
 function formatearFechaNombre(fecha) {
     const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    const dia = fecha.getDate();
-    const mes = meses[fecha.getMonth()];
-    const anio = fecha.getFullYear();
-    return `${mes} ${dia} de ${anio}`;
+    return `${meses[fecha.getMonth()]} ${fecha.getDate()} de ${fecha.getFullYear()}`;
 }
 
-
-// Buscar un archivo por nombre exacto.
-async function buscarArchivoPorNombre(token, nombreArchivo) {
-    const query = `'1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu' in parents and name = '${nombreArchivo}' and trashed = false`;
-    console.log('Query:', query); // Verifica la consulta.
-    
-    const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(name,id)`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const data = await response.json();
-    console.log('Archivo encontrado:', data);
-    return data.files.length > 0 ? data.files[0] : null;
-}
-
-// Descargar archivo de Google Drive.
-async function descargarArchivo(token, fileId) {
-    const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const contenido = await response.text();
-    console.log('Contenido descargado:', contenido);
-    return contenido;
-}
-
-// Parsear el contenido del archivo.
+// Procesar el contenido descargado y extraer los datos relevantes
 function parsearContenido(contenido, nombreArchivo) {
     try {
         const datos = JSON.parse(contenido);
-        console.log('Datos procesados:', datos); // Verifica los datos procesados
         const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)[0];
         return datos.map(item => ({
             numeroControl: item.numeroControl,
@@ -944,82 +914,77 @@ function parsearContenido(contenido, nombreArchivo) {
             [`asistencia ${fecha}`]: item.asistencia,
         }));
     } catch (error) {
-        console.error('Error procesando el contenido:', error);
+        console.error("Error procesando el contenido:", error);
         return [];
     }
 }
 
-
-// Renderizar la tabla con los resultados.
-function renderizarTabla(tabla) {
+// Renderizar la tabla en HTML con los datos procesados
+function renderizarTabla(datos) {
     const tablaContainer = document.getElementById('tabla-container');
+    const columnas = Object.keys(datos[0]);
 
-    if (!tablaContainer) {
-        console.error("El contenedor con ID 'tabla-container' no existe.");
-        return;
-    }
-
-    const htmlTabla = `
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Número de Control</th>
-                        <th>Nombre del Alumno</th>
-                        <th>Materia</th>
-                        ${Object.keys(tabla[0]).filter(key => key.startsWith('asistencia')).map(key => `<th>${key}</th>`).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tabla.map(row => `
-                        <tr>
-                            <td>${row.numeroControl}</td>
-                            <td>${row.nombre}</td>
-                            <td>${row.materia}</td>
-                            ${Object.keys(row).filter(key => key.startsWith('asistencia')).map(key => `<td>${row[key]}</td>`).join('')}
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-        <div class="d-flex gap-2 mt-3">
-            <button class="btn btn-primary" onclick="imprimirLista()">Imprimir Lista</button>
-            <button class="btn btn-secondary" onclick="exportarCSV(${JSON.stringify(tabla)})">Exportar como CSV</button>
-            <button class="btn btn-danger" onclick="limpiarFormulario()">Sumarizar Otro Grupo</button>
-        </div>
+    const tablaHTML = `
+        <table class="table">
+            <thead>
+                <tr>${columnas.map(col => `<th>${col}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+                ${datos.map(fila => `
+                    <tr>${columnas.map(col => `<td>${fila[col] || ''}</td>`).join('')}</tr>
+                `).join('')}
+            </tbody>
+        </table>
     `;
-    console.log('HTML de la tabla:', htmlTabla); // Verifica el HTML generado
-    tablaContainer.innerHTML = htmlTabla;
+
+    tablaContainer.innerHTML = tablaHTML;
 }
 
+// Exportar los datos a CSV
+function exportarCSV(datos) {
+    const columnas = Object.keys(datos[0]);
+    const contenido = [
+        columnas.join(','),
+        ...datos.map(fila => columnas.map(col => fila[col] || '').join(','))
+    ].join('\n');
 
-
-
-function imprimirLista() {
-    window.print();
-}
-
-function exportarCSV(tabla) {
-    const filas = tabla.map(row => Object.values(row).join(',')).join('\n');
-    const blob = new Blob([filas], { type: 'text/csv' });
+    const blob = new Blob([contenido], { type: 'text/csv' });
     const enlace = document.createElement('a');
     enlace.href = URL.createObjectURL(blob);
     enlace.download = 'lista_asistencia.csv';
     enlace.click();
 }
 
-function limpiarFormulario() {
-    document.getElementById('fecha-inicial').value = '';
-    document.getElementById('fecha-final').value = '';
-    document.getElementById('sumarizar-materia').value = '';
-    document.getElementById('sumarizar-salon').value = '';
-    document.getElementById('tabla-container').innerHTML = '';
-}
-
+// Controlador principal
 document.getElementById('sumarizar-lista').addEventListener('click', async () => {
+    const fechaInicio = document.getElementById('fecha-inicial').value;
+    const fechaFin = document.getElementById('fecha-final').value;
+    const materia = document.getElementById('sumarizar-materia').value;
+    const folderId = '1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu'; // Cambia este ID por tu carpeta de Google Drive
+
+    if (!fechaInicio || !fechaFin || !materia) {
+        alert("Por favor, completa todos los campos.");
+        return;
+    }
+
     const token = await renovarAccessToken();
-    await buscarArchivos(token);
+    const fechas = generarFechas(fechaInicio, fechaFin);
+    const datosCompletos = [];
+
+    for (const fecha of fechas) {
+        const nombreArchivo = `${materia} - ${formatearFechaNombre(fecha)}`;
+        const archivos = await buscarArchivos(token, nombreArchivo, folderId);
+
+        for (const archivo of archivos) {
+            const contenido = await descargarArchivo(token, archivo.id);
+            const datos = parsearContenido(contenido, archivo.name);
+            datosCompletos.push(...datos);
+        }
+    }
+
+    if (datosCompletos.length > 0) {
+        renderizarTabla(datosCompletos);
+    } else {
+        alert("No se encontraron datos para los filtros seleccionados.");
+    }
 });
-
-
-
