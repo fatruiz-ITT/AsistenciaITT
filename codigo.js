@@ -1163,11 +1163,18 @@ document.getElementById('filtrar-datos').addEventListener('click', async () => {
     const materiaSeleccionada = document.getElementById('materia-eliminar').value;
     const grupoSeleccionado = document.getElementById('grupo-eliminar').value;
 
+    console.log('Materia seleccionada:', materiaSeleccionada);
+    console.log('Grupo seleccionado:', grupoSeleccionado);
+
     try {
         const datos = await cargarDatosDesdeSheet();
+        console.log('Datos cargados desde Google Sheets:', datos);
+
         const alumnosFiltrados = datos.filter(
             alumno => alumno.materia === materiaSeleccionada && alumno.grupo === grupoSeleccionado
         );
+
+        console.log('Alumnos filtrados:', alumnosFiltrados);
 
         const tabla = document.getElementById('tabla-alumnos');
         tabla.innerHTML = ''; // Limpiar la tabla
@@ -1187,19 +1194,25 @@ document.getElementById('filtrar-datos').addEventListener('click', async () => {
             tabla.appendChild(tr);
         });
 
+        console.log('Tabla actualizada con los alumnos filtrados.');
+
         // Añadir funcionalidad de eliminación
         document.querySelectorAll('.eliminar-btn').forEach(boton => {
             boton.addEventListener('click', async (event) => {
                 const index = event.target.closest('button').dataset.index;
                 const alumno = alumnosFiltrados[index];
 
+                console.log('Intentando eliminar alumno:', alumno);
+
                 try {
                     const accessToken = await renovarAccessToken();
-                    // Lógica para eliminar registro (reemplazar con tu implementación)
-                    console.log(`Eliminando alumno: ${alumno.control}`);
-                    // Aquí enviarías la petición para eliminar al alumno
+                    console.log('Access token renovado:', accessToken);
 
-                    event.target.closest('tr').remove(); // Eliminar fila de la tabla
+                    // Simular eliminación del registro
+                    console.log(`Eliminando alumno con control ${alumno.control}`);
+
+                    // Eliminar fila de la tabla visualmente
+                    event.target.closest('tr').remove();
                     alert('Registro eliminado correctamente.');
                 } catch (error) {
                     console.error('Error al eliminar el registro:', error);
@@ -1211,5 +1224,6 @@ document.getElementById('filtrar-datos').addEventListener('click', async () => {
         console.error('Error al filtrar los datos:', error);
     }
 });
+
 
 
