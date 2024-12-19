@@ -922,12 +922,13 @@ function formatearFechaNombre(fecha) {
 }
 
 // Procesar el contenido descargado y extraer los datos relevantes
+// Parsear el contenido del archivo
 function parsearContenido(contenido, nombreArchivo) {
     try {
-        // Verificar si el contenido es válido y se puede parsear
+        // Verificar si el contenido es JSON
         if (contenido.trim().startsWith('{') || contenido.trim().startsWith('[')) {
             const datos = JSON.parse(contenido);
-            console.log('Datos procesados:', datos);
+            console.log('Datos procesados como JSON:', datos);
             const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)[0];
             return datos.map(item => ({
                 numeroControl: item.numeroControl,
@@ -935,15 +936,29 @@ function parsearContenido(contenido, nombreArchivo) {
                 materia: nombreArchivo.split('-')[0],
                 [`asistencia ${fecha}`]: item.asistencia,
             }));
-        } else {
-            console.error('Contenido no es un JSON válido:', contenido);
-            throw new Error('Contenido no procesable como JSON.');
         }
+
+        // Procesar contenido como CSV
+        console.log('Procesando contenido como CSV...');
+        const lineas = contenido.trim().split('\n');
+        const datos = lineas.map(linea => {
+            const [numeroControl, nombre, asistencia, materia] = linea.split(',');
+            return {
+                numeroControl: numeroControl.trim(),
+                nombre: nombre.trim(),
+                materia: materia.trim(),
+                [`asistencia`]: asistencia.trim(),
+            };
+        });
+
+        console.log('Datos procesados como CSV:', datos);
+        return datos;
     } catch (error) {
         console.error('Error procesando el contenido:', error);
         return [];
     }
 }
+
 
 
 // Renderizar la tabla en HTML con los datos procesados
