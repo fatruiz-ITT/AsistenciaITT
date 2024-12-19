@@ -604,7 +604,7 @@ async function cargarEmpresasEliminar() {
         cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado);
     });
 }
-
+cargarEmpresasEliminar();
 // Función para cargar empresas en el formulario de impresión
 async function cargarEmpresasImprimir() {
     const sheetURL = "https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
