@@ -158,6 +158,7 @@ document.getElementById('btn-imprimir').addEventListener('click', () => {
 document.getElementById('btn-sumarizar').addEventListener('click', () => {
     ocultarTodosLosFormularios();
     document.getElementById('form-sumarizar').style.display = 'block';
+    cargarEmpresasSumarizar();
 });
 
 
@@ -645,6 +646,50 @@ async function cargarEmpresasImprimir() {
     document.getElementById('grupo-imprimir').addEventListener('change', () => {
         const materiaSeleccionada = selectEmpresa.value;
         const grupoSeleccionado = document.getElementById('grupo-imprimir').value;
+        cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado);
+    });
+}
+
+async function cargarEmpresasSumarizar() {
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const response = await fetch(sheetURL);
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+
+    const empresas = new Set();
+    const grupos = {};
+    const data = json.table.rows;
+    const selectEmpresa = document.getElementById('sumarizar-materia');
+    selectEmpresa.innerHTML = '<option value="">Selecciona una opción</option>';
+
+    data.forEach(row => {
+        const empresa = row.c[4]?.v; // Columna E para Empresa
+        if (empresa) {
+            empresas.add(empresa);
+            const grupo = row.c[3]?.v; // Columna D para Grupo
+            if (grupo && !grupos[empresa]) {
+                grupos[empresa] = new Set();
+            }
+            if (grupo) {
+                grupos[empresa].add(grupo);
+            }
+        }
+    });
+
+    empresas.forEach(empresa => {
+        const option = document.createElement('option');
+        option.value = empresa;
+        option.textContent = empresa;
+        selectEmpresa.appendChild(option);
+    });
+
+    selectEmpresa.addEventListener('change', () => {
+        cargarGrupos(data, selectEmpresa.value, grupos, 'sumarizar-salon');
+    });
+
+    document.getElementById('grupo-imprimir').addEventListener('change', () => {
+        const materiaSeleccionada = selectEmpresa.value;
+        const grupoSeleccionado = document.getElementById('sumarizar-salon').value;
         cargarAlumnos(data, materiaSeleccionada, grupoSeleccionado);
     });
 }
