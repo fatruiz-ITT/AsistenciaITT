@@ -863,32 +863,45 @@ async function buscarArchivos() {
 
     const token = await renovarAccessToken();
 
-    const query = `'1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu' in parents and trashed = false`;
+    // Generar nombres de archivo dinámicamente según el rango de fechas
+    const fechas = generarFechasRango(new Date(fechaInicial), new Date(fechaFinal));
+    const nombresEsperados = fechas.map(fecha => `${materia}-${salon}-${formatearFechaNombre(fecha)}`);
+
+    const tabla = [];
+    for (const nombreArchivo of nombresEsperados) {
+        const archivo = await buscarArchivoPorNombre(token, nombreArchivo);
+        if (archivo) {
+            const contenido = await descargarArchivo(token, archivo.id);
+            tabla.push(...parsearContenido(contenido, nombreArchivo));
+        }
+    }
+
+    renderizarTabla(tabla);
+}
+
+function generarFechasRango(fechaInicio, fechaFin) {
+    const fechas = [];
+    let fechaActual = new Date(fechaInicio);
+    while (fechaActual <= fechaFin) {
+        fechas.push(new Date(fechaActual));
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+    return fechas;
+}
+
+function formatearFechaNombre(fecha) {
+    const opciones = { day: 'numeric', month: 'short', year: 'numeric' };
+    return fecha.toLocaleDateString('es-ES', opciones).replace(/\sde\s/g, ' ');
+}
+
+async function buscarArchivoPorNombre(token, nombreArchivo) {
+    const query = `'1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu' in parents and name = '${nombreArchivo}' and trashed = false`;
     const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(name,id)`, {
         headers: { Authorization: `Bearer ${token}` },
     });
 
     const data = await response.json();
-
-    // Filtrar archivos por nombre según fecha
-    const archivosFiltrados = data.files.filter(file => {
-        const match = file.name.match(/(\d{1,2}\s\w+\sde\s\d{4})$/);
-        if (match) {
-            const fechaArchivo = new Date(match[0]);
-            const fechaInicio = new Date(fechaInicial);
-            const fechaFin = new Date(fechaFinal);
-            return fechaArchivo >= fechaInicio && fechaArchivo <= fechaFin;
-        }
-        return false;
-    });
-
-    const tabla = [];
-    for (const archivo of archivosFiltrados) {
-        const contenido = await descargarArchivo(token, archivo.id);
-        tabla.push(...parsearContenido(contenido, archivo.name));
-    }
-
-    renderizarTabla(tabla);
+    return data.files.length > 0 ? data.files[0] : null;
 }
 
 async function descargarArchivo(token, fileId) {
@@ -900,7 +913,7 @@ async function descargarArchivo(token, fileId) {
 
 function parsearContenido(contenido, nombreArchivo) {
     const datos = JSON.parse(contenido);
-    const fecha = nombreArchivo.match(/(\d{1,2}\s\w+\sde\s\d{4})$/)[0];
+    const fecha = nombreArchivo.match(/(\d{1,2}\s\w+\s\d{4})$/)[0];
     return datos.map(item => ({
         numeroControl: item.numeroControl,
         nombre: item.nombre,
@@ -967,4 +980,5 @@ function limpiarFormulario() {
 }
 
 document.getElementById('sumarizar-lista').addEventListener('click', buscarArchivos);
+
 
