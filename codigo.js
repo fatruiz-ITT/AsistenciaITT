@@ -850,39 +850,36 @@ async function renovarAccessToken() {
     return data.access_token;
 }
 
-async function buscarArchivos() {
-    const fechaInicial = document.getElementById('fecha-inicial').value;
-    const fechaFinal = document.getElementById('fecha-final').value;
-    const materia = document.getElementById('sumarizar-materia').value;
-    const salon = document.getElementById('sumarizar-salon').value;
+async function buscarArchivos(token, fileId) {
+    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const exportUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain`;  // Cambia el mimeType según el tipo de archivo que estás tratando de exportar.
 
-    if (!fechaInicial || !fechaFinal || !materia || !salon) {
-        alert('Por favor, completa todos los campos antes de continuar.');
-        return;
-    }
+    try {
+        // Intentar descargar el archivo directamente
+        let response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
 
-    const token = await renovarAccessToken();
-    const fechas = generarFechas(new Date(fechaInicial), new Date(fechaFinal));
-    const nombresEsperados = fechas.map(fecha => `${materia}-${salon}-${formatearFechaNombre(fecha)}`);
+        // Si la descarga directa no funciona, intentar exportar el archivo
+        if (!response.ok) {
+            console.warn('Intentando exportar el archivo como texto...');
+            response = await fetch(exportUrl, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-    console.log('Nombres generados:', nombresEsperados); // Verifica los nombres generados.
-
-    const resultados = [];
-
-    for (const nombreArchivo of nombresEsperados) {
-        const archivo = await buscarArchivoPorNombre(token, nombreArchivo);
-
-        if (archivo) {
-            const contenido = await descargarArchivo(token, archivo.id);
-            const datosProcesados = parsearContenido(contenido, nombreArchivo);
-            resultados.push(...datosProcesados); // Agrega los datos de este archivo al array general.
+            if (!response.ok) {
+                console.error('Error al exportar el archivo:', await response.text());
+                throw new Error('No se pudo exportar el archivo.');
+            }
         }
-    }
 
-    if (resultados.length === 0) {
-        alert('No se encontraron archivos en el rango de fechas seleccionado.');
-    } else {
-        renderizarTabla(resultados);
+        // Si la respuesta es exitosa, obtener el contenido
+        const contenido = await response.text();
+        console.log('Contenido descargado:', contenido);
+        return contenido;
+    } catch (error) {
+        console.error('Error al descargar el archivo:', error);
+        throw new Error('No se pudo descargar el archivo.');
     }
 }
 
