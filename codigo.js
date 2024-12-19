@@ -1015,6 +1015,10 @@ function limpiarFormulario() {
     document.getElementById('tabla-container').innerHTML = '';
 }
 
-document.getElementById('sumarizar-lista').addEventListener('click', buscarArchivos);
+document.getElementById('sumarizar-lista').addEventListener('click', async () => {
+    const token = await renovarAccessToken();
+    await buscarArchivos(token);
+});
+
 
 
