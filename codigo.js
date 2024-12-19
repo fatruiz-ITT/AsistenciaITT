@@ -1007,40 +1007,24 @@ function renderizarTabla(datos) {
 }
 
 function imprimirTabla() {
-    const tablaHTML = document.getElementById('tabla-container').innerHTML;
-    const ventana = window.open('', '_blank');
-    ventana.document.write(`
-        <html>
-        <head>
-            <title>Imprimir Lista de Asistencia</title>
-            <style>
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-                th, td {
-                    border: 1px solid black;
-                    padding: 8px;
-                    text-align: left;
-                }
-                th {
-                    background-color: #f2f2f2;
-                }
-            </style>
-        </head>
-        <body>
-            ${tablaHTML}
-        </body>
-        </html>
-    `);
-    ventana.document.close();
-    ventana.print();
+    const tablaContainer = document.getElementById('tabla-container');
+    const botones = document.querySelectorAll('button'); // Seleccionar todos los botones visibles
+
+    // Ocultar botones antes de imprimir
+    botones.forEach(boton => boton.style.display = 'none');
+
+    // Invocar el cuadro de impresión
+    window.print();
+
+    // Restaurar visibilidad de los botones después de imprimir
+    botones.forEach(boton => boton.style.display = '');
 }
+
 
 
 // Exportar los datos a CSV
 function exportarCSV(datos) {
-    const columnas = ['Numero de control', 'Nombre del alumno', 'Materia', 'Asistio', 'Fecha de cuando asistio'];
+    const columnas = ['Numero de control', 'Nombre del alumno', 'Materia', 'Asistio', 'Fecha de Asistencia'];
     const contenido = [
         columnas.join(','), // Encabezados
         ...datos.map(fila => [
