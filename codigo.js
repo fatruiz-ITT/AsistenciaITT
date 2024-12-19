@@ -651,7 +651,7 @@ async function cargarEmpresasImprimir() {
 }
 
 async function cargarEmpresasSumarizar() {
-    const sheetURL = "https://docs.google.com/spreadsheets/d/1sLO2eSk409iWY7T_t0Dj0PMuqg9TK6gDmzmnk77jWgc/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
+    const sheetURL = "https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos";
     const response = await fetch(sheetURL);
     const text = await response.text();
     const json = JSON.parse(text.substring(47).slice(0, -2));
