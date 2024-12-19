@@ -934,7 +934,7 @@ async function descargarArchivo(token, fileId) {
 function parsearContenido(contenido, nombreArchivo) {
     try {
         const datos = JSON.parse(contenido);
-        console.log('Datos procesados:', datos);
+        console.log('Datos procesados:', datos); // Verifica los datos procesados
         const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)[0];
         return datos.map(item => ({
             numeroControl: item.numeroControl,
@@ -948,6 +948,7 @@ function parsearContenido(contenido, nombreArchivo) {
     }
 }
 
+
 // Renderizar la tabla con los resultados.
 function renderizarTabla(tabla) {
     const tablaContainer = document.getElementById('tabla-container');
@@ -957,7 +958,7 @@ function renderizarTabla(tabla) {
         return;
     }
 
-    tablaContainer.innerHTML = `
+    const htmlTabla = `
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -986,7 +987,10 @@ function renderizarTabla(tabla) {
             <button class="btn btn-danger" onclick="limpiarFormulario()">Sumarizar Otro Grupo</button>
         </div>
     `;
+    console.log('HTML de la tabla:', htmlTabla); // Verifica el HTML generado
+    tablaContainer.innerHTML = htmlTabla;
 }
+
 
 
 
