@@ -666,7 +666,7 @@ async function cargarEmpresasSumarizar() {
         const empresa = row.c[4]?.v; // Columna E para Empresa
         if (empresa) {
             empresas.add(empresa);
-            const grupo = row.c[3]?.v; // Columna D para Grupo
+            const grupo = row.c[6]?.v; // Columna D para Grupo
             if (grupo && !grupos[empresa]) {
                 grupos[empresa] = new Set();
             }
