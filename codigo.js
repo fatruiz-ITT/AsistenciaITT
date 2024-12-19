@@ -863,7 +863,7 @@ async function buscarArchivos() {
 
     const token = await renovarAccessToken();
     const fechas = generarFechas(new Date(fechaInicial), new Date(fechaFinal));
-    const nombresEsperados = fechas.map(fecha => `${materia}-${salon}-${formatearFechaNombre(fecha)}`);
+    const nombresEsperados = fechas.map(fecha => `${materia}-${salon}-${formatearFechaVisual(fecha)}`);
 
     console.log('Nombres generados:', nombresEsperados); // Verifica los nombres generados.
 
