@@ -1144,7 +1144,33 @@ async function cargarDatosDesdeSheet() {
     try {
         const response = await fetch(SHEET_URL);
         const text = await response.text();
-        const json = JSON.parse(text.substring(47).slice(0, -2)); // Formatear la respuesta
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+
+        // Poblar las opciones de Materia y Grupo
+        const materias = [...new Set(json.table.rows.map(row => row.c[2]?.v))];
+        const grupos = [...new Set(json.table.rows.map(row => row.c[3]?.v))];
+
+        const materiaSelect = document.getElementById('materia-eliminar');
+        const grupoSelect = document.getElementById('grupo-eliminar');
+
+        // Limpiar las opciones anteriores
+        materiaSelect.innerHTML = '<option value="">Selecciona una opción</option>';
+        grupoSelect.innerHTML = '<option value="">Selecciona una opción</option>';
+
+        // Agregar nuevas opciones
+        materias.forEach(materia => {
+            const option = document.createElement('option');
+            option.value = materia;
+            option.textContent = materia;
+            materiaSelect.appendChild(option);
+        });
+
+        grupos.forEach(grupo => {
+            const option = document.createElement('option');
+            option.value = grupo;
+            option.textContent = grupo;
+            grupoSelect.appendChild(option);
+        });
 
         return json.table.rows.map(row => ({
             control: row.c[0]?.v || '',
@@ -1157,6 +1183,7 @@ async function cargarDatosDesdeSheet() {
         throw error;
     }
 }
+
 
 // Filtrar y mostrar datos en la tabla
 document.getElementById('filtrar-datos').addEventListener('click', async () => {
@@ -1180,6 +1207,7 @@ document.getElementById('filtrar-datos').addEventListener('click', async () => {
         tabla.innerHTML = ''; // Limpiar la tabla
 
         alumnosFiltrados.forEach((alumno, index) => {
+            console.log('Agregando alumno a la tabla:', alumno);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${alumno.control}</td>
