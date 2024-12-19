@@ -1106,3 +1106,110 @@ async function manejarArchivos(token, archivos) {
         }
     }
 }
+
+// BOTON PARA ELIMINAR FUNCION --------------------------------------------------------
+
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1dGOWq1lSrV_C7ISPSRV5U-htfeHJqEkkbEA9PrcROiU/gviz/tq?tqx=out:json&sheet=AnexoAlumnos';
+
+// Función para renovar el token de acceso
+async function renovarAccessToken() {
+    const clientId = '217452065709-eoi637u5kp9929b3laob6in6a6skknjv.apps.googleusercontent.com';
+    const clientSecret = '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';
+    const refreshToken = '1//04YzbTZvht8juCgYIARAAGAQSNwF-L9Ir9GmX3DjgLJnUPsgP889ElWofH2CYxZFwreBsPbLwdSpVXUNw-lsly-p8cuf0Nhje4U4';
+
+    const body = new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token'
+    });
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        return data.access_token;
+    } else {
+        console.error('Error al renovar el token de acceso:', await response.text());
+        throw new Error('No se pudo renovar el token de acceso.');
+    }
+}
+
+// Función para cargar datos desde Google Sheets
+async function cargarDatosDesdeSheet() {
+    try {
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
+        const json = JSON.parse(text.substring(47).slice(0, -2)); // Formatear la respuesta
+
+        return json.table.rows.map(row => ({
+            control: row.c[0]?.v || '',
+            nombre: row.c[1]?.v || '',
+            materia: row.c[2]?.v || '',
+            grupo: row.c[3]?.v || ''
+        }));
+    } catch (error) {
+        console.error('Error al cargar los datos:', error);
+        throw error;
+    }
+}
+
+// Filtrar y mostrar datos en la tabla
+document.getElementById('filtrar-datos').addEventListener('click', async () => {
+    const materiaSeleccionada = document.getElementById('materia-eliminar').value;
+    const grupoSeleccionado = document.getElementById('grupo-eliminar').value;
+
+    try {
+        const datos = await cargarDatosDesdeSheet();
+        const alumnosFiltrados = datos.filter(
+            alumno => alumno.materia === materiaSeleccionada && alumno.grupo === grupoSeleccionado
+        );
+
+        const tabla = document.getElementById('tabla-alumnos');
+        tabla.innerHTML = ''; // Limpiar la tabla
+
+        alumnosFiltrados.forEach((alumno, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${alumno.control}</td>
+                <td>${alumno.nombre}</td>
+                <td>${alumno.materia}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm eliminar-btn" data-index="${index}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tabla.appendChild(tr);
+        });
+
+        // Añadir funcionalidad de eliminación
+        document.querySelectorAll('.eliminar-btn').forEach(boton => {
+            boton.addEventListener('click', async (event) => {
+                const index = event.target.closest('button').dataset.index;
+                const alumno = alumnosFiltrados[index];
+
+                try {
+                    const accessToken = await renovarAccessToken();
+                    // Lógica para eliminar registro (reemplazar con tu implementación)
+                    console.log(`Eliminando alumno: ${alumno.control}`);
+                    // Aquí enviarías la petición para eliminar al alumno
+
+                    event.target.closest('tr').remove(); // Eliminar fila de la tabla
+                    alert('Registro eliminado correctamente.');
+                } catch (error) {
+                    console.error('Error al eliminar el registro:', error);
+                    alert('No se pudo eliminar el registro.');
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error al filtrar los datos:', error);
+    }
+});
+
+
