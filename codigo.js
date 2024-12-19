@@ -824,3 +824,147 @@ document.getElementById('grupo-imprimir').addEventListener('change', cargarDatos
 
 // Inicializar datos
 obtenerDatosGoogleSheets();
+
+
+
+//******************************************************************************************************
+
+
+// Asegúrate de incluir las bibliotecas necesarias para la API de Google Drive
+
+async function renovarAccessToken() {
+    const clientId = '217452065709-eoi637u5kp9929b3laob6in6a6skknjv.apps.googleusercontent.com';
+    const clientSecret = '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';
+    const refreshToken = '1//04YzbTZvht8juCgYIARAAGAQSNwF-L9Ir9GmX3DjgLJnUPsgP889ElWofH2CYxZFwreBsPbLwdSpVXUNw-lsly-p8cuf0Nhje4U4';
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: refreshToken,
+            grant_type: 'refresh_token',
+        }),
+    });
+
+    const data = await response.json();
+    return data.access_token;
+}
+
+async function buscarArchivos() {
+    const fechaInicial = document.getElementById('fecha-inicial').value;
+    const fechaFinal = document.getElementById('fecha-final').value;
+    const materia = document.getElementById('sumarizar-materia').value;
+    const salon = document.getElementById('sumarizar-salon').value;
+
+    if (!fechaInicial || !fechaFinal || !materia || !salon) {
+        alert('Por favor, llena todos los campos.');
+        return;
+    }
+
+    const token = await renovarAccessToken();
+
+    const query = `'1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu' in parents and trashed = false`;
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(name,id)`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await response.json();
+
+    // Filtrar archivos por nombre según fecha
+    const archivosFiltrados = data.files.filter(file => {
+        const match = file.name.match(/(\d{1,2}\s\w+\sde\s\d{4})$/);
+        if (match) {
+            const fechaArchivo = new Date(match[0]);
+            const fechaInicio = new Date(fechaInicial);
+            const fechaFin = new Date(fechaFinal);
+            return fechaArchivo >= fechaInicio && fechaArchivo <= fechaFin;
+        }
+        return false;
+    });
+
+    const tabla = [];
+    for (const archivo of archivosFiltrados) {
+        const contenido = await descargarArchivo(token, archivo.id);
+        tabla.push(...parsearContenido(contenido, archivo.name));
+    }
+
+    renderizarTabla(tabla);
+}
+
+async function descargarArchivo(token, fileId) {
+    const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return await response.text();
+}
+
+function parsearContenido(contenido, nombreArchivo) {
+    // Asume que el contenido es JSON o texto plano con datos
+    const datos = JSON.parse(contenido); // Modifica según el formato real
+    const fecha = nombreArchivo.match(/(\d{1,2}\s\w+\sde\s\d{4})$/)[0];
+    return datos.map(item => ({
+        numeroControl: item.numeroControl,
+        nombre: item.nombre,
+        materia: nombreArchivo.split('-')[0],
+        [`asistencia ${fecha}`]: item.asistencia,
+    }));
+}
+
+function renderizarTabla(tabla) {
+    const contenedor = document.createElement('div');
+    contenedor.innerHTML = `
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Número de Control</th>
+                    <th>Nombre del Alumno</th>
+                    <th>Materia</th>
+                    <th>Asistencias</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tabla.map(row => `
+                    <tr>
+                        <td>${row.numeroControl}</td>
+                        <td>${row.nombre}</td>
+                        <td>${row.materia}</td>
+                        <td>${Object.keys(row)
+                            .filter(key => key.startsWith('asistencia'))
+                            .map(key => `${key}: ${row[key]}`)
+                            .join(', ')}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-primary" onclick="imprimirLista()">Imprimir Lista</button>
+            <button class="btn btn-secondary" onclick="exportarCSV(tabla)">Exportar como CSV</button>
+            <button class="btn btn-danger" onclick="ocultarTabla()">Sumarizar Otro Grupo</button>
+        </div>
+    `;
+
+    document.body.appendChild(contenedor);
+}
+
+function imprimirLista() {
+    window.print();
+}
+
+function exportarCSV(tabla) {
+    const filas = tabla.map(row => Object.values(row).join(',')).join('\n');
+    const blob = new Blob([filas], { type: 'text/csv' });
+    const enlace = document.createElement('a');
+    enlace.href = URL.createObjectURL(blob);
+    enlace.download = 'lista_asistencia.csv';
+    enlace.click();
+}
+
+function ocultarTabla() {
+    const tabla = document.querySelector('table');
+    if (tabla) tabla.remove();
+}
+
+document.getElementById('sumarizar-lista').addEventListener('click', buscarArchivos);
+
