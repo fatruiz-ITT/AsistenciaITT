@@ -869,19 +869,38 @@ async function buscarArchivos(token, nombreArchivo, folderId) {
 }
 
 // Descargar contenido de un archivo desde Google Drive
-async function descargarArchivo(token, fileId) {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+async function descargarArchivo(token, fileId, mimeType = 'text/plain') {
+    // Intentar descargar directamente
+    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const exportUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=${mimeType}`;
 
-    if (!response.ok) {
-        console.error("Error al descargar el archivo:", await response.text());
-        throw new Error("No se pudo descargar el archivo.");
+    try {
+        let response = await fetch(downloadUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Si la descarga directa falla, intentar exportar el archivo
+        if (!response.ok) {
+            console.warn('Archivo no descargable directamente, intentando exportar...');
+            response = await fetch(exportUrl, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!response.ok) {
+                console.error('Error al exportar el archivo:', await response.text());
+                throw new Error('No se pudo exportar el archivo.');
+            }
+        }
+
+        const contenido = await response.text();
+        console.log('Contenido descargado o exportado:', contenido);
+        return contenido;
+    } catch (error) {
+        console.error('Error al descargar o exportar el archivo:', error);
+        throw error;
     }
-
-    return await response.text();
 }
+
 
 // Generar un rango de fechas entre dos fechas dadas
 function generarFechas(fechaInicial, fechaFinal) {
