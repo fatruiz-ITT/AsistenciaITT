@@ -925,34 +925,32 @@ function formatearFechaNombre(fecha) {
 // Parsear el contenido del archivo
 function parsearContenido(contenido, nombreArchivo) {
     try {
+        const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)?.[0] || '';
+        
         // Verificar si el contenido es JSON
         if (contenido.trim().startsWith('{') || contenido.trim().startsWith('[')) {
             const datos = JSON.parse(contenido);
-            console.log('Datos procesados como JSON:', datos);
-            const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)[0];
             return datos.map(item => ({
                 numeroControl: item.numeroControl,
                 nombre: item.nombre,
                 materia: nombreArchivo.split('-')[0],
-                [`asistencia ${fecha}`]: item.asistencia,
+                asistencia: item.asistencia,
+                fecha: fecha
             }));
         }
 
         // Procesar contenido como CSV
-        console.log('Procesando contenido como CSV...');
         const lineas = contenido.trim().split('\n');
-        const datos = lineas.map(linea => {
+        return lineas.map(linea => {
             const [numeroControl, nombre, asistencia, materia] = linea.split(',');
             return {
                 numeroControl: numeroControl.trim(),
                 nombre: nombre.trim(),
                 materia: materia.trim(),
-                [`asistencia`]: asistencia.trim(),
+                asistencia: asistencia.trim(),
+                fecha: fecha
             };
         });
-
-        console.log('Datos procesados como CSV:', datos);
-        return datos;
     } catch (error) {
         console.error('Error procesando el contenido:', error);
         return [];
@@ -960,11 +958,10 @@ function parsearContenido(contenido, nombreArchivo) {
 }
 
 
-
 // Renderizar la tabla en HTML con los datos procesados
 function renderizarTabla(datos) {
     const tablaContainer = document.getElementById('tabla-container');
-    const columnas = Object.keys(datos[0]);
+    const columnas = ['Numero de control', 'Nombre del alumno', 'Materia', 'Asistio', 'Fecha de cuando asistio'];
 
     const tablaHTML = `
         <table class="table">
@@ -973,21 +970,77 @@ function renderizarTabla(datos) {
             </thead>
             <tbody>
                 ${datos.map(fila => `
-                    <tr>${columnas.map(col => `<td>${fila[col] || ''}</td>`).join('')}</tr>
+                    <tr>
+                        <td>${fila.numeroControl || ''}</td>
+                        <td>${fila.nombre || ''}</td>
+                        <td>${fila.materia || ''}</td>
+                        <td>${fila.asistencia || ''}</td>
+                        <td>${fila.fecha || ''}</td>
+                    </tr>
                 `).join('')}
             </tbody>
         </table>
+        <div id="botones-container" class="botones">
+            <button id="imprimir-tabla" class="btn btn-primary">Imprimir</button>
+            <button id="exportar-csv" class="btn btn-secondary">Exportar a CSV</button>
+        </div>
     `;
 
     tablaContainer.innerHTML = tablaHTML;
+
+    // Agregar funcionalidad a los botones
+    document.getElementById('imprimir-tabla').addEventListener('click', () => {
+        imprimirTabla();
+    });
+    document.getElementById('exportar-csv').addEventListener('click', () => {
+        exportarCSV(datos);
+    });
 }
+
+function imprimirTabla() {
+    const tablaHTML = document.getElementById('tabla-container').innerHTML;
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+        <html>
+        <head>
+            <title>Imprimir Lista de Asistencia</title>
+            <style>
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                th, td {
+                    border: 1px solid black;
+                    padding: 8px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+            </style>
+        </head>
+        <body>
+            ${tablaHTML}
+        </body>
+        </html>
+    `);
+    ventana.document.close();
+    ventana.print();
+}
+
 
 // Exportar los datos a CSV
 function exportarCSV(datos) {
-    const columnas = Object.keys(datos[0]);
+    const columnas = ['Numero de control', 'Nombre del alumno', 'Materia', 'Asistio', 'Fecha de cuando asistio'];
     const contenido = [
-        columnas.join(','),
-        ...datos.map(fila => columnas.map(col => fila[col] || '').join(','))
+        columnas.join(','), // Encabezados
+        ...datos.map(fila => [
+            fila.numeroControl || '',
+            fila.nombre || '',
+            fila.materia || '',
+            fila.asistencia || '',
+            fila.fecha || ''
+        ].join(','))
     ].join('\n');
 
     const blob = new Blob([contenido], { type: 'text/csv' });
