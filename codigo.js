@@ -900,10 +900,12 @@ function generarFechas(fechaInicial, fechaFinal) {
 }
 
 // Formatear fecha en formato esperado (dic 17 de 2024).
+// Formatear fecha en formato "Mes Día de Año" (Ejemplo: Dic 18 de 2024).
 function formatearFechaNombre(fecha) {
     const opciones = { day: 'numeric', month: 'short', year: 'numeric' };
-    return fecha.toLocaleDateString('es-ES', opciones).replace(/\sde\s/g, ' ');
+    return fecha.toLocaleDateString('es-ES', opciones).replace('.', '').replace(' de ', ' de ');
 }
+
 
 // Buscar un archivo por nombre exacto.
 async function buscarArchivoPorNombre(token, nombreArchivo) {
