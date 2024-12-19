@@ -986,11 +986,11 @@ function renderizarTabla(datos) {
         </table>
         <div id="botones-container" class="botones">
         <div class="d-flex justify-content-center">
-            <button id="imprimir-tabla" class="btn btn-info mt-3">
-                <i class="fas fa-eye"></i> Imprimir
+            <button id="imprimir-tabla" class="btn btn-outline-warning mt-3">
+                <i class="fa fa-print"></i> Imprimir
             </button>
-            <button id="exportar-csv" class="btn btn-info mt-3">
-                <i class="fas fa-eye"></i> Exportar a CSV
+            <button id="exportar-csv" class="btn btn-outline-secondary mt-3">
+                <i class="fa fa-table"></i> Exportar a CSV
             </button>
         </div>
     `;
