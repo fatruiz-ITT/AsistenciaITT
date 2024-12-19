@@ -924,19 +924,27 @@ function formatearFechaNombre(fecha) {
 // Procesar el contenido descargado y extraer los datos relevantes
 function parsearContenido(contenido, nombreArchivo) {
     try {
-        const datos = JSON.parse(contenido);
-        const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)[0];
-        return datos.map(item => ({
-            numeroControl: item.numeroControl,
-            nombre: item.nombre,
-            materia: nombreArchivo.split('-')[0],
-            [`asistencia ${fecha}`]: item.asistencia,
-        }));
+        // Verificar si el contenido es válido y se puede parsear
+        if (contenido.trim().startsWith('{') || contenido.trim().startsWith('[')) {
+            const datos = JSON.parse(contenido);
+            console.log('Datos procesados:', datos);
+            const fecha = nombreArchivo.match(/(\w+\s\d{1,2}\sde\s\d{4})$/)[0];
+            return datos.map(item => ({
+                numeroControl: item.numeroControl,
+                nombre: item.nombre,
+                materia: nombreArchivo.split('-')[0],
+                [`asistencia ${fecha}`]: item.asistencia,
+            }));
+        } else {
+            console.error('Contenido no es un JSON válido:', contenido);
+            throw new Error('Contenido no procesable como JSON.');
+        }
     } catch (error) {
-        console.error("Error procesando el contenido:", error);
+        console.error('Error procesando el contenido:', error);
         return [];
     }
 }
+
 
 // Renderizar la tabla en HTML con los datos procesados
 function renderizarTabla(datos) {
@@ -1007,3 +1015,17 @@ document.getElementById('sumarizar-lista').addEventListener('click', async () =>
         alert("No se encontraron datos para los filtros seleccionados.");
     }
 });
+
+async function manejarArchivos(token, archivos) {
+    for (const archivo of archivos) {
+        console.log('Procesando archivo:', archivo.name);
+        try {
+            const contenido = await descargarArchivo(token, archivo.id, 'text/plain');
+            console.log('Contenido descargado:', contenido);
+            const datos = parsearContenido(contenido, archivo.name);
+            datosCompletos.push(...datos);
+        } catch (error) {
+            console.error('Error manejando archivo:', archivo.name, error);
+        }
+    }
+}
