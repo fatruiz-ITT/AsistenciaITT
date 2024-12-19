@@ -902,15 +902,10 @@ function generarFechas(fechaInicial, fechaFinal) {
 // Formatear fecha en formato "mes día de año" (Ejemplo: dic 18 de 2024).
 function formatearFechaNombre(fecha) {
     const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-
-    // Crear una fecha en la zona horaria local (sin ajustes UTC)
-    const [anio, mes, dia] = fechaInput.split('-');
-    const fecha = new Date(anio, mes - 1, dia); // mes es 0-based en JS
-
-    const diaLocal = fecha.getDate();
-    const mesLocal = meses[fecha.getMonth()];
-    const anioLocal = fecha.getFullYear();
-    return `${mesLocal} ${diaLocal} de ${anioLocal}`;
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    const anio = fecha.getFullYear();
+    return `${mes} ${dia} de ${anio}`;
 }
 
 
