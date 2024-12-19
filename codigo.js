@@ -965,7 +965,7 @@ function parsearContenido(contenido, nombreArchivo) {
 // Renderizar la tabla en HTML con los datos procesados
 function renderizarTabla(datos) {
     const tablaContainer = document.getElementById('tabla-container');
-    const columnas = ['Numero de control', 'Nombre del alumno', 'Materia', 'Asistio', 'Fecha de cuando asistio'];
+    const columnas = ['Numero de control', 'Nombre del alumno', 'Materia', 'Asistio', 'Fecha de Asistencia'];
 
     const tablaHTML = `
         <table class="table">
@@ -986,10 +986,10 @@ function renderizarTabla(datos) {
         </table>
         <div id="botones-container" class="botones">
         <div class="d-flex justify-content-center">
-            <button id="imprimir-tabla" class="btn btn-outline-warning mt-3">
+            <button id="imprimir-tabla" class="btn btn-secondary mt-3">
                 <i class="fa fa-print"></i> Imprimir
             </button>
-            <button id="exportar-csv" class="btn btn-outline-secondary mt-3">
+            <button id="exportar-csv" class="btn btn-secondary mt-3">
                 <i class="fa fa-table"></i> Exportar a CSV
             </button>
         </div>
@@ -1043,7 +1043,6 @@ function exportarCSV(datos) {
     enlace.click();
 }
 
-// Controlador principal
 // Controlador principal
 document.getElementById('sumarizar-lista').addEventListener('click', async () => {
     const fechaInicio = document.getElementById('fecha-inicial').value;
