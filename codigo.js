@@ -837,7 +837,7 @@ async function renovarAccessToken() {
 
     const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: JSON.stringify({
             client_id: clientId,
             client_secret: clientSecret,
@@ -910,6 +910,7 @@ function formatearFechaNombre(fecha) {
 async function buscarArchivoPorNombre(token, nombreArchivo) {
     const query = `'1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu' in parents and name = '${nombreArchivo}' and trashed = false`;
     console.log('Query:', query); // Verifica la consulta.
+    
     const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(name,id)`, {
         headers: { Authorization: `Bearer ${token}` },
     });
