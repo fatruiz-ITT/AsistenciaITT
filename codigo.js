@@ -1147,8 +1147,8 @@ async function cargarDatosDesdeSheet() {
         const json = JSON.parse(text.substring(47).slice(0, -2));
 
         // Poblar las opciones de Materia y Grupo
-        const materias = [...new Set(json.table.rows.map(row => row.c[2]?.v))];
-        const grupos = [...new Set(json.table.rows.map(row => row.c[3]?.v))];
+        const materias = [...new Set(json.table.rows.map(row => row.c[4]?.v))];
+        const grupos = [...new Set(json.table.rows.map(row => row.c[6]?.v))];
 
         const materiaSelect = document.getElementById('materia-eliminar');
         const grupoSelect = document.getElementById('grupo-eliminar');
@@ -1173,10 +1173,10 @@ async function cargarDatosDesdeSheet() {
         });
 
         return json.table.rows.map(row => ({
-            control: row.c[0]?.v || '',
-            nombre: row.c[1]?.v || '',
-            materia: row.c[2]?.v || '',
-            grupo: row.c[3]?.v || ''
+            control: row.c[1]?.v || '',
+            nombre: row.c[2]?.v || '',
+            materia: row.c[3]?.v || '',
+            grupo: row.c[4]?.v || ''
         }));
     } catch (error) {
         console.error('Error al cargar los datos:', error);
@@ -1203,7 +1203,7 @@ document.getElementById('filtrar-datos').addEventListener('click', async () => {
 
         console.log('Alumnos filtrados:', alumnosFiltrados);
 
-        const tabla = document.getElementById('tabla-alumnos');
+        const tabla = document.getElementById('tabla-alumnoseliminar');
         tabla.innerHTML = ''; // Limpiar la tabla
 
         alumnosFiltrados.forEach((alumno, index) => {
