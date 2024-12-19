@@ -908,18 +908,22 @@ function generarFechas(fechaInicial, fechaFinal) {
     let fechaActual = new Date(fechaInicial);
 
     while (fechaActual <= new Date(fechaFinal)) {
-        fechas.push(new Date(fechaActual));
+        // Crear una nueva fecha para evitar modificaciones no deseadas
+        fechas.push(new Date(fechaActual.getTime()));
         fechaActual.setDate(fechaActual.getDate() + 1); // Avanzar un día
     }
 
     return fechas;
 }
 
+
 // Formatear fechas en un formato legible para el nombre de archivo
 function formatearFechaNombre(fecha) {
     const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    return `${meses[fecha.getMonth()]} ${fecha.getDate()} de ${fecha.getFullYear()}`;
+    const fechaLocal = new Date(fecha.getTime()); // Crear una copia para trabajar
+    return `${meses[fechaLocal.getMonth()]} ${fechaLocal.getDate()} de ${fechaLocal.getFullYear()}`;
 }
+
 
 // Procesar el contenido descargado y extraer los datos relevantes
 // Parsear el contenido del archivo
