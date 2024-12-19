@@ -857,73 +857,105 @@ async function buscarArchivos() {
     const salon = document.getElementById('sumarizar-salon').value;
 
     if (!fechaInicial || !fechaFinal || !materia || !salon) {
-        alert('Por favor, llena todos los campos.');
+        alert('Por favor, completa todos los campos antes de continuar.');
         return;
     }
 
     const token = await renovarAccessToken();
-
-    // Generar nombres de archivo dinámicamente según el rango de fechas
-    const fechas = generarFechasRango(new Date(fechaInicial), new Date(fechaFinal));
+    const fechas = generarFechas(new Date(fechaInicial), new Date(fechaFinal));
     const nombresEsperados = fechas.map(fecha => `${materia}-${salon}-${formatearFechaNombre(fecha)}`);
 
-    const tabla = [];
+    console.log('Nombres generados:', nombresEsperados); // Verifica los nombres generados.
+
+    const resultados = [];
+
     for (const nombreArchivo of nombresEsperados) {
         const archivo = await buscarArchivoPorNombre(token, nombreArchivo);
+
         if (archivo) {
             const contenido = await descargarArchivo(token, archivo.id);
-            tabla.push(...parsearContenido(contenido, nombreArchivo));
+            const datosProcesados = parsearContenido(contenido, nombreArchivo);
+            resultados.push(...datosProcesados); // Agrega los datos de este archivo al array general.
         }
     }
 
-    renderizarTabla(tabla);
+    if (resultados.length === 0) {
+        alert('No se encontraron archivos en el rango de fechas seleccionado.');
+    } else {
+        renderizarTabla(resultados);
+    }
 }
 
-function generarFechasRango(fechaInicio, fechaFin) {
+// Generar fechas entre dos rangos.
+function generarFechas(fechaInicial, fechaFinal) {
     const fechas = [];
-    let fechaActual = new Date(fechaInicio);
-    while (fechaActual <= fechaFin) {
+    let fechaActual = new Date(fechaInicial);
+
+    while (fechaActual <= fechaFinal) {
         fechas.push(new Date(fechaActual));
-        fechaActual.setDate(fechaActual.getDate() + 1);
+        fechaActual.setDate(fechaActual.getDate() + 1); // Avanzar al día siguiente.
     }
+
     return fechas;
 }
 
+// Formatear fecha en formato esperado (dic 17 de 2024).
 function formatearFechaNombre(fecha) {
     const opciones = { day: 'numeric', month: 'short', year: 'numeric' };
     return fecha.toLocaleDateString('es-ES', opciones).replace(/\sde\s/g, ' ');
 }
 
+// Buscar un archivo por nombre exacto.
 async function buscarArchivoPorNombre(token, nombreArchivo) {
     const query = `'1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu' in parents and name = '${nombreArchivo}' and trashed = false`;
+    console.log('Query:', query); // Verifica la consulta.
     const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(name,id)`, {
         headers: { Authorization: `Bearer ${token}` },
     });
 
     const data = await response.json();
+    console.log('Archivo encontrado:', data);
     return data.files.length > 0 ? data.files[0] : null;
 }
 
+// Descargar archivo de Google Drive.
 async function descargarArchivo(token, fileId) {
     const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
         headers: { Authorization: `Bearer ${token}` },
     });
-    return await response.text();
+
+    const contenido = await response.text();
+    console.log('Contenido descargado:', contenido);
+    return contenido;
 }
 
+// Parsear el contenido del archivo.
 function parsearContenido(contenido, nombreArchivo) {
-    const datos = JSON.parse(contenido);
-    const fecha = nombreArchivo.match(/(\d{1,2}\s\w+\s\d{4})$/)[0];
-    return datos.map(item => ({
-        numeroControl: item.numeroControl,
-        nombre: item.nombre,
-        materia: nombreArchivo.split('-')[0],
-        [`asistencia ${fecha}`]: item.asistencia,
-    }));
+    try {
+        const datos = JSON.parse(contenido);
+        console.log('Datos procesados:', datos);
+        const fecha = nombreArchivo.match(/(\d{1,2}\s\w+\s\d{4})$/)[0];
+        return datos.map(item => ({
+            numeroControl: item.numeroControl,
+            nombre: item.nombre,
+            materia: nombreArchivo.split('-')[0],
+            [`asistencia ${fecha}`]: item.asistencia,
+        }));
+    } catch (error) {
+        console.error('Error procesando el contenido:', error);
+        return [];
+    }
 }
 
+// Renderizar la tabla con los resultados.
 function renderizarTabla(tabla) {
     const tablaContainer = document.getElementById('tabla-container');
+
+    if (!tablaContainer) {
+        console.error("El contenedor con ID 'tabla-container' no existe.");
+        return;
+    }
+
     tablaContainer.innerHTML = `
         <div class="table-responsive">
             <table class="table table-striped">
@@ -932,7 +964,7 @@ function renderizarTabla(tabla) {
                         <th>Número de Control</th>
                         <th>Nombre del Alumno</th>
                         <th>Materia</th>
-                        <th>Asistencias</th>
+                        ${Object.keys(tabla[0]).filter(key => key.startsWith('asistencia')).map(key => `<th>${key}</th>`).join('')}
                     </tr>
                 </thead>
                 <tbody>
@@ -941,10 +973,7 @@ function renderizarTabla(tabla) {
                             <td>${row.numeroControl}</td>
                             <td>${row.nombre}</td>
                             <td>${row.materia}</td>
-                            <td>${Object.keys(row)
-                                .filter(key => key.startsWith('asistencia'))
-                                .map(key => `${key}: ${row[key]}`)
-                                .join(', ')}</td>
+                            ${Object.keys(row).filter(key => key.startsWith('asistencia')).map(key => `<td>${row[key]}</td>`).join('')}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -957,6 +986,7 @@ function renderizarTabla(tabla) {
         </div>
     `;
 }
+
 
 function imprimirLista() {
     window.print();
