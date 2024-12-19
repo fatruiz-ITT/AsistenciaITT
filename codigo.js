@@ -1055,38 +1055,55 @@ function exportarCSV(datos) {
 }
 
 // Controlador principal
+// Controlador principal
 document.getElementById('sumarizar-lista').addEventListener('click', async () => {
     const fechaInicio = document.getElementById('fecha-inicial').value;
     const fechaFin = document.getElementById('fecha-final').value;
     const materia = document.getElementById('sumarizar-materia').value;
     const folderId = '1xPJ8ZCeR8hvWu38BRW8Mpr5jcOs6Cceu'; // Cambia este ID por tu carpeta de Google Drive
+    const estadoOperacion = document.getElementById('estado-operacion');
 
     if (!fechaInicio || !fechaFin || !materia) {
         alert("Por favor, completa todos los campos.");
         return;
     }
 
-    const token = await renovarAccessToken();
-    const fechas = generarFechas(fechaInicio, fechaFin);
-    const datosCompletos = [];
+    // Mostrar el mensaje de estado "Buscando..."
+    estadoOperacion.textContent = "Buscando, por favor espera...";
+    estadoOperacion.style.color = "blue";
 
-    for (const fecha of fechas) {
-        const nombreArchivo = `${materia} - ${formatearFechaNombre(fecha)}`;
-        const archivos = await buscarArchivos(token, nombreArchivo, folderId);
+    try {
+        const token = await renovarAccessToken();
+        const fechas = generarFechas(fechaInicio, fechaFin);
+        const datosCompletos = [];
 
-        for (const archivo of archivos) {
-            const contenido = await descargarArchivo(token, archivo.id);
-            const datos = parsearContenido(contenido, archivo.name);
-            datosCompletos.push(...datos);
+        for (const fecha of fechas) {
+            const nombreArchivo = `${materia} - ${formatearFechaNombre(fecha)}`;
+            const archivos = await buscarArchivos(token, nombreArchivo, folderId);
+
+            for (const archivo of archivos) {
+                const contenido = await descargarArchivo(token, archivo.id);
+                const datos = parsearContenido(contenido, archivo.name);
+                datosCompletos.push(...datos);
+            }
         }
-    }
 
-    if (datosCompletos.length > 0) {
-        renderizarTabla(datosCompletos);
-    } else {
-        alert("No se encontraron datos para los filtros seleccionados.");
+        if (datosCompletos.length > 0) {
+            renderizarTabla(datosCompletos);
+        } else {
+            alert("No se encontraron datos para los filtros seleccionados.");
+        }
+
+        // Cambiar el mensaje al finalizar
+        estadoOperacion.textContent = "Sumarizado finalizado.";
+        estadoOperacion.style.color = "green";
+    } catch (error) {
+        console.error("Error durante la operación:", error);
+        estadoOperacion.textContent = "Error durante la operación. Por favor, revisa la consola para más detalles.";
+        estadoOperacion.style.color = "red";
     }
 });
+
 
 async function manejarArchivos(token, archivos) {
     for (const archivo of archivos) {
