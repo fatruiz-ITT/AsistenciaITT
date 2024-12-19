@@ -899,10 +899,13 @@ function generarFechas(fechaInicial, fechaFinal) {
     return fechas;
 }
 
-// Formatear fecha en formato "Mes Día de Año" (Ejemplo: Dic 18 de 2024).
+// Formatear fecha en formato "mes día de año" (Ejemplo: dic 18 de 2024).
 function formatearFechaNombre(fecha) {
-    const opciones = { day: 'numeric', month: 'short', year: 'numeric' };
-    return fecha.toLocaleDateString('es-ES', opciones).replace('.', '').replace(' de ', ' de ');
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    const anio = fecha.getFullYear();
+    return `${mes} ${dia} de ${anio}`;
 }
 
 // Buscar un archivo por nombre exacto.
@@ -986,6 +989,7 @@ function renderizarTabla(tabla) {
         </div>
     `;
 }
+
 
 
 function imprimirLista() {
