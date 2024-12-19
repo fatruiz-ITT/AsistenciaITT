@@ -830,8 +830,6 @@ obtenerDatosGoogleSheets();
 //******************************************************************************************************
 
 
-// Asegúrate de incluir las bibliotecas necesarias para la API de Google Drive
-
 async function renovarAccessToken() {
     const clientId = '217452065709-eoi637u5kp9929b3laob6in6a6skknjv.apps.googleusercontent.com';
     const clientSecret = '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';
@@ -901,8 +899,7 @@ async function descargarArchivo(token, fileId) {
 }
 
 function parsearContenido(contenido, nombreArchivo) {
-    // Asume que el contenido es JSON o texto plano con datos
-    const datos = JSON.parse(contenido); // Modifica según el formato real
+    const datos = JSON.parse(contenido);
     const fecha = nombreArchivo.match(/(\d{1,2}\s\w+\sde\s\d{4})$/)[0];
     return datos.map(item => ({
         numeroControl: item.numeroControl,
@@ -913,39 +910,39 @@ function parsearContenido(contenido, nombreArchivo) {
 }
 
 function renderizarTabla(tabla) {
-    const contenedor = document.createElement('div');
-    contenedor.innerHTML = `
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Número de Control</th>
-                    <th>Nombre del Alumno</th>
-                    <th>Materia</th>
-                    <th>Asistencias</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${tabla.map(row => `
+    const tablaContainer = document.getElementById('tabla-container');
+    tablaContainer.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
                     <tr>
-                        <td>${row.numeroControl}</td>
-                        <td>${row.nombre}</td>
-                        <td>${row.materia}</td>
-                        <td>${Object.keys(row)
-                            .filter(key => key.startsWith('asistencia'))
-                            .map(key => `${key}: ${row[key]}`)
-                            .join(', ')}</td>
+                        <th>Número de Control</th>
+                        <th>Nombre del Alumno</th>
+                        <th>Materia</th>
+                        <th>Asistencias</th>
                     </tr>
-                `).join('')}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    ${tabla.map(row => `
+                        <tr>
+                            <td>${row.numeroControl}</td>
+                            <td>${row.nombre}</td>
+                            <td>${row.materia}</td>
+                            <td>${Object.keys(row)
+                                .filter(key => key.startsWith('asistencia'))
+                                .map(key => `${key}: ${row[key]}`)
+                                .join(', ')}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
         <div class="d-flex gap-2 mt-3">
             <button class="btn btn-primary" onclick="imprimirLista()">Imprimir Lista</button>
-            <button class="btn btn-secondary" onclick="exportarCSV(tabla)">Exportar como CSV</button>
-            <button class="btn btn-danger" onclick="ocultarTabla()">Sumarizar Otro Grupo</button>
+            <button class="btn btn-secondary" onclick="exportarCSV(${JSON.stringify(tabla)})">Exportar como CSV</button>
+            <button class="btn btn-danger" onclick="limpiarFormulario()">Sumarizar Otro Grupo</button>
         </div>
     `;
-
-    document.body.appendChild(contenedor);
 }
 
 function imprimirLista() {
@@ -961,9 +958,12 @@ function exportarCSV(tabla) {
     enlace.click();
 }
 
-function ocultarTabla() {
-    const tabla = document.querySelector('table');
-    if (tabla) tabla.remove();
+function limpiarFormulario() {
+    document.getElementById('fecha-inicial').value = '';
+    document.getElementById('fecha-final').value = '';
+    document.getElementById('sumarizar-materia').value = '';
+    document.getElementById('sumarizar-salon').value = '';
+    document.getElementById('tabla-container').innerHTML = '';
 }
 
 document.getElementById('sumarizar-lista').addEventListener('click', buscarArchivos);
